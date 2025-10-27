@@ -1,0 +1,7 @@
+include README.md
+include LICENSE
+include requirements.txt
+include ROADMAP.md
+include USER_TESTING_GUIDE.md
+recursive-include src/flowsphere_mcp/templates *.py *.jinja2
+recursive-include tests/fixtures *.json

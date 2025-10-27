@@ -1,0 +1,25 @@
+{
+  "name": "user-api-tests",
+  "version": "1.0.0",
+  "description": "FlowSphere generated API tests",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "keywords": [
+    "flowsphere",
+    "api",
+    "testing",
+    "jest"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.0.0",
+    "axios": "^1.6.0",
+    "jsonpath-plus": "^7.2.0",
+    "uuid": "^9.0.0"
+  }
+}

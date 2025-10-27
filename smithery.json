@@ -1,0 +1,62 @@
+{
+  "name": "flowsphere-mcp-server",
+  "version": "1.0.0",
+  "description": "Generate production-ready test code (Python pytest/behave, JavaScript Jest) from FlowSphere configurations. Supports all 18 FlowSphere features including HTTP execution, variable substitution, conditions, validations, and more.",
+  "author": "Your Name",
+  "homepage": "https://github.com/yourusername/flowsphere-mcp-server",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/flowsphere-mcp-server.git"
+  },
+  "license": "MIT",
+  "tags": [
+    "testing",
+    "code-generation",
+    "api-testing",
+    "pytest",
+    "jest",
+    "behave",
+    "bdd",
+    "flowsphere",
+    "test-automation",
+    "gherkin",
+    "cucumber"
+  ],
+  "runtime": "python",
+  "command": "python",
+  "args": ["src/flowsphere_mcp/server.py"],
+  "requirements": {
+    "python": ">=3.10"
+  },
+  "tools": [
+    {
+      "name": "get_flowsphere_schema",
+      "description": "Get complete FlowSphere configuration schema documentation including all properties, types, examples, and edge cases"
+    },
+    {
+      "name": "get_flowsphere_features",
+      "description": "Get detailed documentation of all 18 FlowSphere features with implementation notes"
+    },
+    {
+      "name": "get_feature_checklist",
+      "description": "Get a checklist of all 18 features that must be implemented in generated code"
+    },
+    {
+      "name": "generate_python_pytest",
+      "description": "Generate production-ready Python pytest code from FlowSphere configuration. Supports all 18 features including HTTP execution, variable substitution, conditions, validations, and more."
+    },
+    {
+      "name": "generate_python_behave",
+      "description": "Generate Python behave/BDD tests with Gherkin feature files and step definitions. Produces human-readable test scenarios for stakeholders."
+    },
+    {
+      "name": "generate_javascript_jest",
+      "description": "Generate JavaScript Jest tests with async/await and modern ES6+ syntax. Includes complete APISequence class and package.json."
+    }
+  ],
+  "categories": [
+    "testing",
+    "development",
+    "automation"
+  ]
+}
