@@ -1,0 +1,344 @@
+# FlowSphere MCP Server - Development Roadmap
+
+This document outlines the development phases for the FlowSphere MCP Server code generation project.
+
+## ✅ Phase 1: Schema Documentation Provider (COMPLETED)
+
+**Status:** Complete
+**Commit:** `f400d9e`
+
+**Deliverables:**
+- [x] Project structure with src/ and tests/ directories
+- [x] Comprehensive config schema documentation (`config_schema.py`)
+- [x] Detailed feature documentation (`features.py`)
+- [x] Feature checklist (18 items) for validation
+- [x] MCP server with stdio transport
+- [x] Three MCP tools: get_flowsphere_schema, get_flowsphere_features, get_feature_checklist
+- [x] Comprehensive tests (all passing)
+
+**Files Created:**
+- `src/flowsphere_mcp/schema/config_schema.py` (300+ lines)
+- `src/flowsphere_mcp/schema/features.py` (200+ lines)
+- `src/flowsphere_mcp/server.py`
+- `tests/test_schema.py`
+
+---
+
+## 🚧 Phase 2: Python pytest Code Generation
+
+**Status:** Next
+**Goal:** Generate production-ready Python pytest code from FlowSphere configs
+
+### Tasks
+
+#### 2.1 Create Python Code Templates
+- [ ] Create base template class (`templates/python/base_template.py`)
+- [ ] Create pytest test class template with:
+  - [ ] APISequence class structure
+  - [ ] Variable substitution method
+  - [ ] Field extraction method (JSONPath)
+  - [ ] Condition evaluation method
+  - [ ] HTTP request execution method
+  - [ ] Validation method
+- [ ] Create Jinja2 templates for code generation
+- [ ] Add template helpers for:
+  - [ ] Header generation
+  - [ ] Body generation
+  - [ ] Validation code generation
+
+#### 2.2 Build Python Code Generator
+- [ ] Create `generators/base_generator.py` base class
+- [ ] Create `generators/python_generator.py` with:
+  - [ ] Config parser (read and validate FlowSphere config)
+  - [ ] Code builder (combine templates with config data)
+  - [ ] Import statement generator
+  - [ ] Class method generator for each node
+  - [ ] Test function generator
+  - [ ] Defaults merging logic
+- [ ] Add support for all FlowSphere features:
+  - [ ] HTTP execution (all methods)
+  - [ ] Variable substitution (all 4 types)
+  - [ ] Condition evaluation (all operators)
+  - [ ] Validation (status + JSONPath)
+  - [ ] User prompts
+  - [ ] Browser launch
+  - [ ] Skip default headers/validations flags
+
+#### 2.3 Implement MCP Tool
+- [ ] Add `generate_python_pytest` tool implementation to server.py
+- [ ] Tool accepts FlowSphere config as input
+- [ ] Tool returns complete Python code as output
+- [ ] Add error handling and validation
+
+#### 2.4 Testing
+- [ ] Create test configs in `tests/fixtures/`:
+  - [ ] `simple_config.json` - Basic GET/POST flow
+  - [ ] `auth_flow_config.json` - Login + authenticated requests
+  - [ ] `conditional_config.json` - Nodes with conditions
+  - [ ] `validation_config.json` - Multiple validations
+  - [ ] `full_features_config.json` - All features combined
+- [ ] Generate Python code for each test config
+- [ ] Verify generated code runs successfully
+- [ ] Create `tests/test_python_generator.py`
+- [ ] All tests must pass
+
+#### 2.5 Documentation
+- [ ] Update README.md with Phase 2 completion
+- [ ] Add usage examples to README
+- [ ] Document generated code structure
+- [ ] Add troubleshooting guide
+
+### Success Criteria
+- ✅ All 18 features from checklist supported
+- ✅ Generated code runs without modification
+- ✅ Generated code passes all validations
+- ✅ All test configs generate valid Python code
+- ✅ Tests passing
+
+### Estimated Files
+- `src/flowsphere_mcp/templates/python/base_template.py`
+- `src/flowsphere_mcp/templates/python/pytest_template.jinja2`
+- `src/flowsphere_mcp/generators/base_generator.py`
+- `src/flowsphere_mcp/generators/python_generator.py`
+- `tests/fixtures/*.json` (5+ config files)
+- `tests/test_python_generator.py`
+- `tests/generated_code/*.py` (generated examples)
+
+---
+
+## 📋 Phase 3: Python Behave/Cucumber Code Generation
+
+**Status:** Planned
+**Goal:** Generate BDD/Cucumber tests with Gherkin features + behave step definitions
+
+### Tasks
+
+#### 3.1 Create Behave Templates
+- [ ] Create Gherkin feature file template
+- [ ] Create behave step definitions template
+- [ ] Create `APIContext` class for state management
+- [ ] Add step definition decorators (@given, @when, @then)
+
+#### 3.2 Build Behave Code Generator
+- [ ] Create `generators/behave_generator.py`
+- [ ] Convert FlowSphere nodes to Gherkin scenarios
+- [ ] Generate step definitions from nodes
+- [ ] Map FlowSphere validations to BDD assertions
+- [ ] Support all FlowSphere features in step definitions
+
+#### 3.3 Implement MCP Tool
+- [ ] Add `generate_python_behave` tool to server.py
+- [ ] Tool returns both feature file and step definitions
+- [ ] Multi-file output support
+
+#### 3.4 Testing
+- [ ] Create behave test fixtures
+- [ ] Generate feature files and step definitions
+- [ ] Run generated behave tests
+- [ ] Verify all features work in BDD context
+- [ ] Create `tests/test_behave_generator.py`
+
+#### 3.5 Documentation
+- [ ] Update README with behave examples
+- [ ] Document Gherkin feature structure
+- [ ] Add step definition usage guide
+
+### Success Criteria
+- ✅ Valid Gherkin syntax generated
+- ✅ Step definitions implement all FlowSphere features
+- ✅ Generated tests run with `behave` command
+- ✅ All validations translated to BDD assertions
+
+### Estimated Files
+- `src/flowsphere_mcp/templates/python/gherkin_template.jinja2`
+- `src/flowsphere_mcp/templates/python/step_definitions_template.jinja2`
+- `src/flowsphere_mcp/generators/behave_generator.py`
+- `tests/test_behave_generator.py`
+
+---
+
+## 📋 Phase 4: JavaScript/TypeScript Code Generation
+
+**Status:** Planned
+**Goal:** Generate Jest/Mocha tests and cucumber-js BDD tests
+
+### Tasks
+
+#### 4.1 JavaScript/TypeScript Templates
+- [ ] Create Jest test template
+- [ ] Create Mocha test template
+- [ ] Create cucumber-js feature + step definition templates
+- [ ] TypeScript type definitions
+
+#### 4.2 JS/TS Code Generator
+- [ ] Create `generators/javascript_generator.py`
+- [ ] Create `generators/typescript_generator.py`
+- [ ] Support axios for HTTP requests
+- [ ] Generate async/await code
+- [ ] Handle ES6 modules vs CommonJS
+
+#### 4.3 Implement MCP Tools
+- [ ] Add `generate_javascript_jest` tool
+- [ ] Add `generate_javascript_mocha` tool
+- [ ] Add `generate_javascript_cucumber` tool
+- [ ] Add `generate_typescript_jest` tool
+
+#### 4.4 Testing
+- [ ] Generate JavaScript code for test configs
+- [ ] Verify generated code runs with Node.js
+- [ ] Test with both Jest and Mocha
+- [ ] Test cucumber-js generation
+- [ ] Create `tests/test_javascript_generator.py`
+
+#### 4.5 Documentation
+- [ ] Add JavaScript examples to README
+- [ ] Document package.json requirements
+- [ ] Add TypeScript setup guide
+
+### Success Criteria
+- ✅ Valid JavaScript/TypeScript generated
+- ✅ Code runs with Jest/Mocha
+- ✅ Cucumber-js tests work
+- ✅ All FlowSphere features supported
+
+### Estimated Files
+- `src/flowsphere_mcp/templates/javascript/jest_template.jinja2`
+- `src/flowsphere_mcp/templates/javascript/mocha_template.jinja2`
+- `src/flowsphere_mcp/templates/javascript/cucumber_template.jinja2`
+- `src/flowsphere_mcp/generators/javascript_generator.py`
+- `src/flowsphere_mcp/generators/typescript_generator.py`
+
+---
+
+## 📋 Phase 5: C# Code Generation
+
+**Status:** Planned
+**Goal:** Generate xUnit/NUnit tests and SpecFlow BDD tests
+
+### Tasks
+
+#### 5.1 C# Templates
+- [ ] Create xUnit test template
+- [ ] Create NUnit test template
+- [ ] Create SpecFlow feature + step definition templates
+- [ ] Add proper namespaces and using statements
+
+#### 5.2 C# Code Generator
+- [ ] Create `generators/csharp_generator.py`
+- [ ] Support HttpClient for requests
+- [ ] Generate async/await Task-based code
+- [ ] Handle Newtonsoft.Json for JSON parsing
+- [ ] .NET 6+ compatibility
+
+#### 5.3 Implement MCP Tools
+- [ ] Add `generate_csharp_xunit` tool
+- [ ] Add `generate_csharp_nunit` tool
+- [ ] Add `generate_csharp_specflow` tool
+
+#### 5.4 Testing
+- [ ] Generate C# code for test configs
+- [ ] Verify compilation with dotnet CLI
+- [ ] Test with xUnit and NUnit
+- [ ] Test SpecFlow generation
+- [ ] Create `tests/test_csharp_generator.py`
+
+#### 5.5 Documentation
+- [ ] Add C# examples to README
+- [ ] Document NuGet package requirements
+- [ ] Add .csproj setup guide
+
+### Success Criteria
+- ✅ Valid C# code generated
+- ✅ Code compiles with dotnet CLI
+- ✅ Tests run with xUnit/NUnit
+- ✅ SpecFlow tests work
+- ✅ All FlowSphere features supported
+
+### Estimated Files
+- `src/flowsphere_mcp/templates/csharp/xunit_template.jinja2`
+- `src/flowsphere_mcp/templates/csharp/nunit_template.jinja2`
+- `src/flowsphere_mcp/templates/csharp/specflow_template.jinja2`
+- `src/flowsphere_mcp/generators/csharp_generator.py`
+
+---
+
+## 🔮 Future Enhancements (Phase 6+)
+
+### Advanced Features
+- [ ] **Custom Template Overrides** - Allow users to provide custom Jinja2 templates
+- [ ] **Code Style Options** - Support different formatting styles (black, prettier, etc.)
+- [ ] **Plugin System** - Enable community-contributed language support
+- [ ] **Config Validation** - Validate FlowSphere configs before generation
+- [ ] **Incremental Generation** - Only regenerate changed nodes
+- [ ] **Multi-file Output** - Split large configs into multiple test files
+
+### Additional Languages
+- [ ] **Go** - Generate Go test code
+- [ ] **Java** - Generate JUnit/RestAssured tests
+- [ ] **Ruby** - Generate RSpec tests
+- [ ] **PHP** - Generate PHPUnit tests
+
+### Developer Experience
+- [ ] **CLI Tool** - Standalone CLI for code generation without MCP
+- [ ] **VS Code Extension** - Generate code directly in editor
+- [ ] **Web UI** - Browser-based code generator
+- [ ] **GitHub Action** - Auto-generate tests in CI/CD
+- [ ] **Live Preview** - Show generated code as you edit config
+
+### Quality & Testing
+- [ ] **Code Coverage Analysis** - Ensure all FlowSphere features are tested
+- [ ] **Performance Benchmarks** - Measure generation speed
+- [ ] **Integration Tests** - Test with real APIs
+- [ ] **Fuzz Testing** - Generate code from malformed configs
+
+---
+
+## Development Guidelines
+
+### Before Starting Each Phase
+1. Create a new branch: `git checkout -b phase-N-description`
+2. Review previous phase implementation
+3. Update this roadmap with any learnings
+4. Create test fixtures first (TDD approach)
+
+### During Phase Development
+1. Write tests before implementation
+2. Commit frequently with clear messages
+3. Update README as features are completed
+4. Run all tests before moving to next task
+
+### Completing Each Phase
+1. All tests must pass
+2. Update README.md with completion status
+3. Create detailed commit message
+4. Tag release: `git tag v0.N.0`
+5. Update this roadmap to mark phase complete
+6. Review and plan next phase
+
+### Code Quality Standards
+- All Python code must be formatted with `black`
+- All generated code must be syntactically valid
+- All generated code must run without modification
+- 100% feature coverage (all 18 checklist items)
+- Clear error messages for validation failures
+
+---
+
+## Current Status
+
+**Completed Phases:** 1 / 5
+**Current Phase:** Phase 2 (Python pytest Code Generation)
+**Progress:** 0% (Phase 2 not started)
+
+**Project Metrics:**
+- Total Files: 11
+- Total Lines: 964
+- Tests Passing: 3/3 (100%)
+- MCP Tools: 3 (schema only)
+- Supported Languages: 0 (schema documentation ready)
+
+**Next Milestone:** Complete Phase 2 - Python pytest code generation
+
+---
+
+Last Updated: 2025-10-27
