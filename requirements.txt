@@ -1,0 +1,9 @@
+# MCP Server Dependencies
+mcp>=0.9.0                    # Official Anthropic MCP Python SDK
+
+# Code Generation
+jinja2>=3.1.0                 # Template engine for code generation
+
+# Development Dependencies
+pytest>=7.4.0                 # For testing
+black>=23.0.0                 # Code formatting
