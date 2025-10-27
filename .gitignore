@@ -29,6 +29,7 @@ ENV/
 # IDE
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
@@ -45,3 +46,4 @@ generated_examples/
 # OS
 .DS_Store
 Thumbs.db
+nul
