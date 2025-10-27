@@ -1,0 +1,52 @@
+{
+  "name": "Simple API Test",
+  "description": "Basic GET and POST requests",
+  "enableDebug": false,
+  "defaults": {
+    "baseUrl": "https://jsonplaceholder.typicode.com",
+    "timeout": 30,
+    "headers": {
+      "Content-Type": "application/json",
+      "User-Agent": "FlowSphere/1.0"
+    },
+    "validations": [
+      {
+        "httpStatusCode": 200
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "get_post",
+      "name": "Get a single post",
+      "method": "GET",
+      "url": "/posts/1"
+    },
+    {
+      "id": "create_post",
+      "name": "Create a new post",
+      "method": "POST",
+      "url": "/posts",
+      "body": {
+        "title": "Test Post",
+        "body": "This is a test post",
+        "userId": 1
+      },
+      "validations": [
+        {
+          "httpStatusCode": 201
+        },
+        {
+          "field": "title",
+          "value": "Test Post"
+        }
+      ]
+    },
+    {
+      "id": "get_all_posts",
+      "name": "Get all posts",
+      "method": "GET",
+      "url": "/posts"
+    }
+  ]
+}

@@ -12,6 +12,7 @@ from mcp.types import Tool, TextContent
 
 from schema.config_schema import get_schema_documentation
 from schema.features import get_feature_documentation, get_feature_checklist
+from generators.python_generator import PythonPytestGenerator
 
 
 # Initialize MCP server
@@ -56,13 +57,17 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="generate_python_pytest",
-            description="Generate Python pytest code from a FlowSphere config file (coming in Phase 2)",
+            description="Generate production-ready Python pytest code from a FlowSphere configuration. Supports all 18 FlowSphere features including HTTP execution, variable substitution, conditions, validations, and more.",
             inputSchema={
                 "type": "object",
                 "properties": {
                     "config": {
                         "type": "object",
-                        "description": "FlowSphere configuration object"
+                        "description": "FlowSphere configuration object with nodes, defaults, variables, etc."
+                    },
+                    "test_class_name": {
+                        "type": "string",
+                        "description": "Optional: Custom name for the test class (auto-generated if not provided)"
                     }
                 },
                 "required": ["config"]
@@ -115,12 +120,58 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
         ]
 
     elif name == "generate_python_pytest":
-        return [
-            TextContent(
-                type="text",
-                text="Python pytest code generation is coming in Phase 2. Currently in Phase 1 (schema documentation only)."
-            )
-        ]
+        try:
+            config = arguments.get("config")
+            if not config:
+                raise ValueError("Missing required argument: config")
+
+            # Initialize generator
+            generator = PythonPytestGenerator()
+
+            # Generate code
+            options = {}
+            if "test_class_name" in arguments:
+                options["test_class_name"] = arguments["test_class_name"]
+
+            generated_code = generator.generate(config, **options)
+
+            # Return generated code with metadata
+            result = {
+                "status": "success",
+                "language": generator.get_language_name(),
+                "framework": generator.get_framework_name(),
+                "code": generated_code,
+                "dependencies": generator.get_required_dependencies(),
+                "usage_instructions": generator.get_usage_instructions()
+            }
+
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(result, indent=2)
+                )
+            ]
+
+        except ValueError as e:
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps({
+                        "status": "error",
+                        "error": str(e)
+                    }, indent=2)
+                )
+            ]
+        except Exception as e:
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps({
+                        "status": "error",
+                        "error": f"Code generation failed: {str(e)}"
+                    }, indent=2)
+                )
+            ]
 
     else:
         raise ValueError(f"Unknown tool: {name}")

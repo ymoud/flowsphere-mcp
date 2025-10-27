@@ -1,0 +1,116 @@
+{
+  "name": "Multiple Validations Test",
+  "description": "Tests various validation types and combinations",
+  "enableDebug": false,
+  "defaults": {
+    "baseUrl": "https://reqres.in/api",
+    "timeout": 30,
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    "validations": [
+      {
+        "httpStatusCode": 200
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "get_user_with_validations",
+      "name": "Get user with multiple field validations",
+      "method": "GET",
+      "url": "/users/2",
+      "validations": [
+        {
+          "httpStatusCode": 200
+        },
+        {
+          "field": "data.id",
+          "value": 2
+        },
+        {
+          "field": "data.email"
+        },
+        {
+          "field": "data.first_name"
+        },
+        {
+          "field": "data.last_name"
+        },
+        {
+          "field": "data.avatar"
+        }
+      ]
+    },
+    {
+      "id": "create_user_with_validation",
+      "name": "Create user and validate response fields",
+      "method": "POST",
+      "url": "/users",
+      "body": {
+        "name": "John Doe",
+        "job": "Software Engineer"
+      },
+      "validations": [
+        {
+          "httpStatusCode": 201
+        },
+        {
+          "field": "name",
+          "value": "John Doe"
+        },
+        {
+          "field": "job",
+          "value": "Software Engineer"
+        },
+        {
+          "field": "id"
+        },
+        {
+          "field": "createdAt"
+        }
+      ]
+    },
+    {
+      "id": "skip_default_validations",
+      "name": "Node that skips default validations",
+      "method": "GET",
+      "url": "/users/23",
+      "skipDefaultValidations": true,
+      "validations": [
+        {
+          "httpStatusCode": 404
+        }
+      ]
+    },
+    {
+      "id": "get_list_validation",
+      "name": "Validate array response",
+      "method": "GET",
+      "url": "/users?page=1",
+      "validations": [
+        {
+          "httpStatusCode": 200
+        },
+        {
+          "field": "page",
+          "value": 1
+        },
+        {
+          "field": "per_page",
+          "value": 6
+        },
+        {
+          "field": "data"
+        },
+        {
+          "field": "data[0].id"
+        },
+        {
+          "field": "data[0].email"
+        }
+      ]
+    }
+  ]
+}

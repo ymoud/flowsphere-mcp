@@ -1,0 +1,276 @@
+{
+  "name": "Full Features Test",
+  "description": "Comprehensive test of all 18 FlowSphere features",
+  "enableDebug": true,
+  "variables": {
+    "apiKey": "test-api-key-123",
+    "environment": "staging",
+    "defaultPage": 1,
+    "maxRetries": 3
+  },
+  "userPrompts": [
+    {
+      "variableName": "userName",
+      "message": "Enter user name",
+      "defaultValue": "Test User"
+    },
+    {
+      "variableName": "userJob",
+      "message": "Enter user job",
+      "defaultValue": "QA Engineer"
+    }
+  ],
+  "defaults": {
+    "baseUrl": "https://reqres.in/api",
+    "timeout": 30,
+    "headers": {
+      "Content-Type": "application/json",
+      "X-API-Key": "{{ .vars.apiKey }}",
+      "X-Environment": "{{ .vars.environment }}"
+    },
+    "validations": [
+      {
+        "httpStatusCode": 200
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "initial_get",
+      "name": "Get initial data with dynamic timestamp",
+      "method": "GET",
+      "url": "/users/{{ .vars.defaultPage }}",
+      "headers": {
+        "X-Request-ID": "{{ $guid }}",
+        "X-Timestamp": "{{ $timestamp }}"
+      },
+      "validations": [
+        {
+          "httpStatusCode": 200
+        },
+        {
+          "field": "data.id"
+        }
+      ]
+    },
+    {
+      "id": "create_with_user_input",
+      "name": "Create user with user input and response reference",
+      "method": "POST",
+      "url": "/users",
+      "headers": {
+        "X-Request-ID": "{{ $guid }}",
+        "X-Previous-User-ID": "{{ .responses.initial_get.data.id }}"
+      },
+      "body": {
+        "name": "{{ .input.userName }}",
+        "job": "{{ .input.userJob }}",
+        "referenceId": "{{ .responses.initial_get.data.id }}",
+        "timestamp": "{{ $timestamp }}",
+        "guid": "{{ $guid }}"
+      },
+      "validations": [
+        {
+          "httpStatusCode": 201
+        },
+        {
+          "field": "name",
+          "value": "{{ .input.userName }}"
+        },
+        {
+          "field": "job",
+          "value": "{{ .input.userJob }}"
+        },
+        {
+          "field": "id"
+        }
+      ]
+    },
+    {
+      "id": "conditional_get",
+      "name": "Get user only if creation was successful",
+      "method": "GET",
+      "url": "/users/2",
+      "conditions": [
+        {
+          "node": "create_with_user_input",
+          "operator": "statusCode",
+          "value": 201
+        },
+        {
+          "node": "create_with_user_input",
+          "field": "id",
+          "operator": "exists"
+        }
+      ],
+      "validations": [
+        {
+          "httpStatusCode": 200
+        },
+        {
+          "field": "data.email"
+        }
+      ]
+    },
+    {
+      "id": "update_with_skip_defaults",
+      "name": "Update with custom headers (skip defaults)",
+      "method": "PUT",
+      "url": "/users/{{ .responses.conditional_get.data.id }}",
+      "skipDefaultHeaders": true,
+      "headers": {
+        "Content-Type": "application/json",
+        "X-Custom-Header": "custom-value",
+        "X-User-ID": "{{ .responses.conditional_get.data.id }}"
+      },
+      "body": {
+        "name": "{{ .input.userName }} - Updated",
+        "job": "Senior {{ .input.userJob }}",
+        "email": "{{ .responses.conditional_get.data.email }}",
+        "lastModified": "{{ $timestamp }}"
+      },
+      "validations": [
+        {
+          "httpStatusCode": 200
+        },
+        {
+          "field": "name"
+        }
+      ]
+    },
+    {
+      "id": "delete_operation",
+      "name": "Delete user with condition",
+      "method": "DELETE",
+      "url": "/users/2",
+      "conditions": [
+        {
+          "node": "update_with_skip_defaults",
+          "operator": "statusCode",
+          "value": 200
+        }
+      ],
+      "skipDefaultValidations": true,
+      "validations": [
+        {
+          "httpStatusCode": 204
+        }
+      ]
+    },
+    {
+      "id": "patch_operation",
+      "name": "Partial update with PATCH",
+      "method": "PATCH",
+      "url": "/users/2",
+      "body": {
+        "job": "{{ .input.userJob }} - Patched",
+        "patchId": "{{ $guid }}"
+      },
+      "validations": [
+        {
+          "httpStatusCode": 200
+        },
+        {
+          "field": "job"
+        }
+      ]
+    },
+    {
+      "id": "complex_conditions",
+      "name": "Node with multiple complex conditions",
+      "method": "GET",
+      "url": "/users?page={{ .vars.defaultPage }}",
+      "conditions": [
+        {
+          "node": "patch_operation",
+          "operator": "statusCode",
+          "value": 200
+        },
+        {
+          "node": "patch_operation",
+          "field": "job",
+          "operator": "exists"
+        },
+        {
+          "variable": "defaultPage",
+          "operator": "equals",
+          "value": 1
+        }
+      ],
+      "validations": [
+        {
+          "httpStatusCode": 200
+        },
+        {
+          "field": "page",
+          "value": 1
+        },
+        {
+          "field": "data"
+        },
+        {
+          "field": "data[0].id"
+        }
+      ]
+    },
+    {
+      "id": "numeric_comparisons",
+      "name": "Test with numeric comparison conditions",
+      "method": "GET",
+      "url": "/users?page=2",
+      "conditions": [
+        {
+          "node": "complex_conditions",
+          "field": "page",
+          "operator": "greaterThanOrEqual",
+          "value": 1
+        },
+        {
+          "node": "complex_conditions",
+          "field": "per_page",
+          "operator": "lessThanOrEqual",
+          "value": 10
+        }
+      ],
+      "validations": [
+        {
+          "httpStatusCode": 200
+        }
+      ]
+    },
+    {
+      "id": "final_verification",
+      "name": "Final verification with all variable types",
+      "method": "POST",
+      "url": "/users",
+      "headers": {
+        "X-Final-Request": "{{ $guid }}",
+        "X-Timestamp": "{{ $timestamp }}",
+        "X-API-Key": "{{ .vars.apiKey }}",
+        "X-Environment": "{{ .vars.environment }}"
+      },
+      "body": {
+        "summary": "Test completed",
+        "userName": "{{ .input.userName }}",
+        "userJob": "{{ .input.userJob }}",
+        "previousUserId": "{{ .responses.initial_get.data.id }}",
+        "previousUserEmail": "{{ .responses.conditional_get.data.email }}",
+        "apiKey": "{{ .vars.apiKey }}",
+        "timestamp": "{{ $timestamp }}",
+        "guid": "{{ $guid }}"
+      },
+      "validations": [
+        {
+          "httpStatusCode": 201
+        },
+        {
+          "field": "summary",
+          "value": "Test completed"
+        },
+        {
+          "field": "id"
+        }
+      ]
+    }
+  ]
+}

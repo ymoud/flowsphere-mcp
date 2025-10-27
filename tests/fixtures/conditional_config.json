@@ -1,0 +1,86 @@
+{
+  "name": "Conditional Execution Test",
+  "description": "Tests conditional node execution based on previous responses",
+  "enableDebug": true,
+  "variables": {
+    "minUsers": 5
+  },
+  "defaults": {
+    "baseUrl": "https://reqres.in/api",
+    "timeout": 30,
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  },
+  "nodes": [
+    {
+      "id": "get_users",
+      "name": "Get users list",
+      "method": "GET",
+      "url": "/users?page=1"
+    },
+    {
+      "id": "check_first_user",
+      "name": "Get first user if email exists",
+      "method": "GET",
+      "url": "/users/{{ .responses.get_users.data[0].id }}",
+      "conditions": [
+        {
+          "node": "get_users",
+          "field": "data[0].email",
+          "operator": "exists"
+        }
+      ]
+    },
+    {
+      "id": "create_user_if_needed",
+      "name": "Create user only if list has less than threshold",
+      "method": "POST",
+      "url": "/users",
+      "body": {
+        "name": "Conditional User",
+        "job": "Developer"
+      },
+      "conditions": [
+        {
+          "node": "get_users",
+          "field": "data",
+          "operator": "lessThan",
+          "value": "{{ .vars.minUsers }}"
+        }
+      ],
+      "validations": [
+        {
+          "httpStatusCode": 201
+        }
+      ]
+    },
+    {
+      "id": "status_check",
+      "name": "Only runs if previous status was 200",
+      "method": "GET",
+      "url": "/users/1",
+      "conditions": [
+        {
+          "node": "get_users",
+          "operator": "statusCode",
+          "value": 200
+        }
+      ]
+    },
+    {
+      "id": "equality_check",
+      "name": "Only runs if page equals 1",
+      "method": "GET",
+      "url": "/users?page=2",
+      "conditions": [
+        {
+          "node": "get_users",
+          "field": "page",
+          "operator": "equals",
+          "value": 1
+        }
+      ]
+    }
+  ]
+}
