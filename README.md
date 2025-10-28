@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/ymoud/flowsphere-mcp/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-114%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-153%20passing-brightgreen.svg)](tests/)
 [![Code Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](tests/)
 [![MCP](https://img.shields.io/badge/MCP-enabled-purple.svg)](https://modelcontextprotocol.io)
 
@@ -16,7 +16,7 @@ This MCP server provides deep schema knowledge and code generation templates to 
 Transforms FlowSphere config files (JSON) into standalone, production-ready test code in:
 - **Python** - ✅ pytest, ✅ behave/BDD
 - **JavaScript** - ✅ Jest, ✅ Mocha, ✅ Cucumber/BDD
-- **C#** - xUnit, NUnit, SpecFlow (coming soon)
+- **C#** - ✅ xUnit, ✅ NUnit, ✅ SpecFlow/BDD
 
 ## Architecture
 
@@ -110,7 +110,7 @@ pytest test_api.py -v -s
 ```
 flowsphere-mcp-server/
 ├── src/flowsphere_mcp/
-│   ├── server.py                 # MCP server entry point (8 tools)
+│   ├── server.py                 # MCP server entry point (11 tools)
 │   ├── schema/
 │   │   ├── config_schema.py      # FlowSphere config schema documentation
 │   │   └── features.py           # Feature descriptions (18 features)
@@ -120,16 +120,22 @@ flowsphere-mcp-server/
 │   │   │   ├── pytest_template.jinja2        # pytest test template
 │   │   │   ├── gherkin_template.jinja2       # Gherkin feature file template
 │   │   │   └── step_definitions_template.jinja2  # behave step definitions
-│   │   └── javascript/
-│   │       ├── jest_template.jinja2          # Jest test template
-│   │       ├── mocha_template.jinja2         # Mocha test template
-│   │       ├── cucumber_feature_template.jinja2  # Cucumber feature file
-│   │       └── cucumber_steps_template.jinja2    # Cucumber step definitions
+│   │   ├── javascript/
+│   │   │   ├── jest_template.jinja2          # Jest test template
+│   │   │   ├── mocha_template.jinja2         # Mocha test template
+│   │   │   ├── cucumber_feature_template.jinja2  # Cucumber feature file
+│   │   │   └── cucumber_steps_template.jinja2    # Cucumber step definitions
+│   │   └── csharp/
+│   │       ├── xunit_template.jinja2         # xUnit test template
+│   │       ├── nunit_template.jinja2         # NUnit test template
+│   │       ├── specflow_feature_template.jinja2  # SpecFlow feature file
+│   │       └── specflow_steps_template.jinja2    # SpecFlow step definitions
 │   └── generators/
 │       ├── base_generator.py      # Base generator class
 │       ├── python_generator.py    # Python pytest generator
 │       ├── behave_generator.py    # Python behave/BDD generator
-│       └── javascript_generator.py # JavaScript Jest/Mocha/Cucumber generators
+│       ├── javascript_generator.py # JavaScript Jest/Mocha/Cucumber generators
+│       └── csharp_generator.py    # C# xUnit/NUnit/SpecFlow generators
 ├── tests/
 │   ├── fixtures/                  # 5 test configs
 │   ├── generated_code/            # Example outputs
@@ -138,7 +144,10 @@ flowsphere-mcp-server/
 │   ├── test_behave_generator.py   # behave generator tests (34 tests)
 │   ├── test_javascript_generator.py # Jest generator tests (30 tests)
 │   ├── test_mocha_generator.py    # Mocha generator tests (8 tests)
-│   └── test_cucumber_generator.py # Cucumber generator tests (8 tests)
+│   ├── test_cucumber_generator.py # Cucumber generator tests (8 tests)
+│   ├── test_xunit_generator.py    # xUnit generator tests (12 tests)
+│   ├── test_nunit_generator.py    # NUnit generator tests (14 tests)
+│   └── test_specflow_generator.py # SpecFlow generator tests (13 tests)
 ├── requirements.txt
 └── README.md
 ```
@@ -149,7 +158,7 @@ flowsphere-mcp-server/
 - **Phase 2** ✅ - Python pytest code generator (production-ready)
 - **Phase 3** ✅ - Python behave code generator (BDD/Cucumber)
 - **Phase 4** ✅ - JavaScript code generators (Jest, Mocha, Cucumber) - **COMPLETE**
-- **Phase 5** 📋 - C# code generation (xUnit, NUnit, SpecFlow)
+- **Phase 5** ✅ - C# code generators (xUnit, NUnit, SpecFlow) - **COMPLETE**
 - **Phase 6** 📋 - Publishing & Distribution (PyPI, Smithery)
 
 ## Phase 2 Complete: Python pytest Code Generation
@@ -425,6 +434,203 @@ mv *_steps.js features/step_definitions/
 npx cucumber-js
 ```
 
+## Phase 5 Complete: C# Code Generation (xUnit, NUnit, SpecFlow)
+
+**Status:** ✅ Complete - All 39 tests passing (153 total tests)
+
+Phase 5 delivers production-ready C# code generation with three frameworks:
+
+### Framework Overview
+- **xUnit** (12 tests) - Modern .NET testing with Fact/Theory attributes
+- **NUnit** (14 tests) - Traditional .NET testing with constraint model
+- **SpecFlow** (13 tests) - BDD/Gherkin for living documentation
+
+### Common Features (All Frameworks)
+- ✅ Modern C# with async/await and HttpClient
+- ✅ Complete APISequence class with all FlowSphere features
+- ✅ HttpClient for HTTP requests
+- ✅ JSONPath support via Newtonsoft.Json.Linq
+- ✅ Complete .csproj file generation
+- ✅ Full support for all 18 FlowSphere features
+
+### Example: C# xUnit Generation
+
+```csharp
+// AI agent generates xUnit tests
+result = mcp_server.call_tool(
+    "generate_csharp_xunit",
+    {
+        "config": {
+            "name": "User API Tests",
+            "defaults": {
+                "baseUrl": "https://api.example.com",
+                "headers": {"Content-Type": "application/json"}
+            },
+            "nodes": [
+                {
+                    "id": "create_user",
+                    "name": "Create new user",
+                    "method": "POST",
+                    "url": "/users",
+                    "body": {
+                        "name": "John Doe",
+                        "email": "john@example.com"
+                    },
+                    "validations": [
+                        {"httpStatusCode": 201},
+                        {"field": "$.id", "operator": "exists"}
+                    ]
+                }
+            ]
+        },
+        "namespace": "MyApp.Tests"
+    }
+)
+```
+
+**Generated Output:**
+
+1. **xUnit Test File** (`UserApiTests.cs`):
+```csharp
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Xunit;
+using Newtonsoft.Json.Linq;
+
+namespace MyApp.Tests
+{
+    public class APISequence
+    {
+        private readonly HttpClient _httpClient;
+        private readonly Dictionary<string, object> _responses;
+
+        public APISequence(Dictionary<string, object> config) { /* ... */ }
+
+        // Complete implementation with all 18 FlowSphere features
+        public async Task<HttpResponseMessage> ExecuteNodeAsync(Dictionary<string, object> node) { /* ... */ }
+        private object SubstituteVariables(object value) { /* ... */ }
+        private bool EvaluateCondition(Dictionary<string, object> condition) { /* ... */ }
+        private void ValidateResponse(Dictionary<string, object> node, HttpResponseMessage response) { /* ... */ }
+    }
+
+    public class UserApiTests
+    {
+        [Fact]
+        public async Task Create_new_user()
+        {
+            var sequence = new APISequence(config);
+            var response = await sequence.ExecuteNodeAsync(node);
+            Assert.NotNull(response);
+        }
+    }
+}
+```
+
+2. **.csproj File** - Complete with all NuGet packages
+
+### Running Generated xUnit Tests
+
+```bash
+# Create project
+dotnet new xunit -n UserApiTests
+cd UserApiTests
+
+# Add packages
+dotnet add package xunit --version 2.6.0
+dotnet add package Newtonsoft.Json --version 13.0.3
+
+# Copy generated file
+# (save as UserApiTests.cs)
+
+# Run tests
+dotnet test
+
+# Run with verbose output
+dotnet test --logger "console;verbosity=detailed"
+```
+
+### NUnit Generation
+
+NUnit uses the constraint model for assertions:
+
+```csharp
+// NUnit uses Assert.That with constraints
+Assert.That(actualValue, Is.EqualTo(expectedValue));
+Assert.That(response.StatusCode, Is.EqualTo(200));
+Assert.That(fieldValue, Does.Contain("expected"));
+```
+
+**Key differences from xUnit:**
+- `[TestFixture]` attribute for test classes
+- `[Test]` attribute instead of `[Fact]`
+- `[SetUp]` method instead of constructor
+- Constraint model: `Assert.That(actual, Is.EqualTo(expected))`
+
+### SpecFlow/BDD Generation
+
+SpecFlow generates two files:
+
+1. **Gherkin Feature File** (`UserApi.feature`):
+```gherkin
+Feature: User API Tests
+  API testing scenarios for user management
+
+  Scenario: Create new user
+    Given I have the API base URL from configuration
+    When I execute POST request to "/users"
+    Then the response status code should be 201
+    And the response field "$.id" should exists ""
+```
+
+2. **Step Definitions** (`UserApiSteps.cs`):
+```csharp
+using TechTalk.SpecFlow;
+using NUnit.Framework;
+
+[Binding]
+public class UserApiSteps
+{
+    private HttpClient _httpClient;
+    private HttpResponseMessage _lastResponse;
+
+    [Given(@"I have the API base URL from configuration")]
+    public void GivenIHaveTheAPIBaseURL() { /* ... */ }
+
+    [When(@"I execute (GET|POST|PUT|DELETE|PATCH) request to ""([^""]*)""")]
+    public async Task WhenIExecuteRequest(string method, string url) { /* ... */ }
+
+    [Then(@"the response status code should be (\d+)")]
+    public void ThenStatusCodeShouldBe(int expectedStatus) { /* ... */ }
+}
+```
+
+### Running Generated SpecFlow Tests
+
+```bash
+# Create project
+dotnet new classlib -n UserApiTests
+cd UserApiTests
+
+# Add packages
+dotnet add package SpecFlow --version 3.9.0
+dotnet add package SpecFlow.NUnit --version 3.9.0
+
+# Create folder structure
+mkdir Features
+mkdir StepDefinitions
+
+# Copy generated files
+mv *.feature Features/
+mv *Steps.cs StepDefinitions/
+
+# Run tests
+dotnet test
+
+# Generate living documentation
+livingdoc test-assembly UserApiTests.dll -t TestExecution.json
+```
+
 ## Available MCP Tools
 
 The server exposes the following tools for AI agents:
@@ -553,6 +759,85 @@ Generates production-ready JavaScript Cucumber/BDD tests from a FlowSphere confi
 - APIWorld class for state management
 - Living documentation for stakeholders
 - Reusable steps across multiple features
+- Full support for all 18 FlowSphere features
+
+### 9. `generate_csharp_xunit`
+Generates production-ready C# xUnit tests from a FlowSphere config.
+
+**Input:**
+- `config` (required): FlowSphere configuration object
+- `test_class_name` (optional): Custom test class name
+- `namespace` (optional): Custom namespace (default: FlowSphere.Tests)
+
+**Output:**
+- `status`: "success" or "error"
+- `code`: Generated C# xUnit test file content
+- `language`: "C#"
+- `framework`: "xUnit"
+- `dependencies`: List of required NuGet packages (xunit, Newtonsoft.Json, etc.)
+- `csproj`: Complete .csproj file with all package references
+- `usage_instructions`: Markdown guide for running tests
+
+**Features:**
+- Modern C# with async/await
+- HttpClient for HTTP requests
+- [Fact] and [Theory] attributes
+- xUnit Assert methods
+- Complete .csproj template
+- Full support for all 18 FlowSphere features
+
+### 10. `generate_csharp_nunit`
+Generates production-ready C# NUnit tests from a FlowSphere config.
+
+**Input:**
+- `config` (required): FlowSphere configuration object
+- `test_class_name` (optional): Custom test class name
+- `namespace` (optional): Custom namespace (default: FlowSphere.Tests)
+
+**Output:**
+- `status`: "success" or "error"
+- `code`: Generated C# NUnit test file content
+- `language`: "C#"
+- `framework`: "NUnit"
+- `dependencies`: List of required NuGet packages (NUnit, Newtonsoft.Json, etc.)
+- `csproj`: Complete .csproj file with all package references
+- `usage_instructions`: Markdown guide for running tests
+
+**Features:**
+- Modern C# with async/await
+- HttpClient for HTTP requests
+- [TestFixture] and [Test] attributes
+- [SetUp] lifecycle methods
+- Constraint model assertions (Assert.That, Is.EqualTo, Does.Contain)
+- Complete .csproj template
+- Full support for all 18 FlowSphere features
+
+### 11. `generate_csharp_specflow`
+Generates production-ready C# SpecFlow/BDD tests from a FlowSphere config.
+
+**Input:**
+- `config` (required): FlowSphere configuration object
+- `feature_name` (optional): Custom feature file name
+- `step_class_name` (optional): Custom step definitions class name
+- `namespace` (optional): Custom namespace (default: FlowSphere.Tests)
+
+**Output:**
+- `status`: "success" or "error"
+- `feature`: Generated Gherkin feature file content
+- `steps`: Generated C# step definitions file content
+- `language`: "C#"
+- `framework`: "SpecFlow"
+- `dependencies`: List of required NuGet packages (SpecFlow, NUnit, etc.)
+- `csproj`: Complete .csproj file with all package references
+- `note`: Instructions on file organization
+
+**Features:**
+- Gherkin feature files with human-readable scenarios
+- C# step definitions with [Binding], [Given], [When], [Then] attributes
+- Async/await support in step definitions
+- Living documentation support
+- SpecFlow + NUnit integration
+- Complete .csproj template
 - Full support for all 18 FlowSphere features
 
 ## Complete Feature Coverage
