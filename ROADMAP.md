@@ -373,7 +373,231 @@ This document outlines the development phases for the FlowSphere MCP Server code
 
 ---
 
-## 🔮 Future Enhancements (Phase 7+)
+## 🚀 Phase 7: Token Efficiency & Performance Optimization
+
+**Status:** Planned
+**Priority:** High (Critical for production/enterprise usage)
+**Goal:** Reduce token consumption by 50-75% to improve cost efficiency and response times
+**Reference:** See `MCP_GENERATION_REPORT.md` for detailed analysis
+
+### Background
+
+Analysis of the code generation process revealed significant token inefficiencies:
+- Current usage: **~20,600 tokens** per generation (1.4MB config with 20 nodes)
+- Token cost breakdown:
+  - Input: 7,500 tokens (full config transmission)
+  - Output: 13,100 tokens (code + embedded config + docs)
+  - ~3,000 tokens (23%) wasted on embedding full config in generated code
+  - ~2,000 tokens (16%) on static documentation repeated in every response
+- **Estimated savings:** 10,000-15,000 tokens per generation (50-75% reduction)
+- **Enterprise impact:** $17,000+ annual savings for teams generating 100 tests/day
+
+### Tasks
+
+#### 7.1 Remove Configuration Embedding (HIGH PRIORITY)
+**Impact:** 3,000 token savings per generation (60% of output reduction)
+**Effort:** 2 hours
+
+- [ ] Modify `csharp_generator.py:_format_config_for_csharp()` to generate file loading code
+- [ ] Update Python generators to use file-based config loading
+- [ ] Update JavaScript generators to use file-based config loading
+- [ ] Generate config files separately from code files
+- [ ] Update templates to load config at runtime instead of embedding
+- [ ] Add config file path parameter to all generators
+- [ ] Update tests to validate file-based config loading
+
+**Current (Inefficient):**
+```csharp
+_config = JsonSerializer.Deserialize<Dictionary<string, object>>(@"{
+    // 1.4MB of JSON embedded here - 3,000 tokens!
+}");
+```
+
+**Proposed (Efficient):**
+```csharp
+var configPath = Path.Combine(AppContext.BaseDirectory, "config.json");
+var configJson = File.ReadAllText(configPath);
+_config = JsonSerializer.Deserialize<Dictionary<string, object>>(configJson);
+```
+
+#### 7.2 Implement Response Mode Parameter (HIGH PRIORITY)
+**Impact:** 2,000-9,500 token savings depending on mode
+**Effort:** 4 hours
+
+- [ ] Add `response_mode` parameter to all MCP tool schemas
+  - Options: `minimal`, `standard`, `verbose`
+  - Default: `standard`
+- [ ] Update `server.py` response construction logic
+- [ ] Implement minimal mode (code only - ~3,500 tokens)
+- [ ] Implement standard mode (code + dependencies + note - ~5,000 tokens)
+- [ ] Implement verbose mode (everything + examples - ~13,000 tokens)
+- [ ] Update all 8 generators to support response modes
+- [ ] Add tests for each response mode
+- [ ] Document response mode usage in README
+
+**Response Mode Comparison:**
+| Mode | Includes | Token Count | Use Case |
+|------|----------|-------------|----------|
+| **minimal** | Code only | ~3,500 | CI/CD pipelines, automated workflows |
+| **standard** | Code + dependencies + note | ~5,000 | Default mode (NEW), balanced output |
+| **verbose** | Everything + examples | ~13,000 | First-time users, documentation needs |
+
+#### 7.3 Create Documentation Retrieval Tools (MEDIUM PRIORITY)
+**Impact:** 1,500 token savings per generation after first use
+**Effort:** 6 hours
+
+- [ ] Create `get_framework_documentation` MCP tool
+  - Parameters: `language`, `framework`, `topic`
+  - Topics: setup, usage, debugging, ci_cd, examples
+- [ ] Extract usage instructions from generators to separate docs
+- [ ] Implement caching recommendations in documentation
+- [ ] Update all generators to remove usage instructions from default output
+- [ ] Create comprehensive documentation files for each framework
+- [ ] Add tests for documentation retrieval
+- [ ] Update README with documentation tool usage
+
+**New Tool:**
+```python
+Tool(
+    name="get_framework_documentation",
+    description="Get setup and usage documentation for a specific test framework",
+    inputSchema={
+        "language": {"enum": ["python", "javascript", "csharp"]},
+        "framework": {"enum": ["pytest", "behave", "jest", "mocha", "cucumber", "xunit", "nunit", "specflow"]},
+        "topic": {"enum": ["setup", "usage", "debugging", "ci_cd", "examples"], "default": "setup"}
+    }
+)
+```
+
+#### 7.4 Add Cost Estimation and Telemetry (MEDIUM PRIORITY)
+**Impact:** Helps users understand and optimize token usage
+**Effort:** 3 hours
+
+- [ ] Add token count estimation to tool responses
+- [ ] Include cost estimates (based on common model pricing)
+- [ ] Add telemetry for tracking token usage patterns
+- [ ] Create optimization recommendations based on config size
+- [ ] Document expected token usage for different config sizes
+- [ ] Add token usage examples to README
+
+#### 7.5 Config Simplification Utilities (LOW PRIORITY)
+**Impact:** 500-1,000 token reduction for large configs
+**Effort:** 8 hours
+
+- [ ] Create config compression utility for transmission
+- [ ] Implement config simplification for generation (strip bodies)
+- [ ] Add support for config references (load from file vs. pass inline)
+- [ ] Create tool for extracting only essential config data
+- [ ] Add validation for compressed configs
+- [ ] Document config optimization best practices
+
+#### 7.6 Incremental Generation Support (LOW PRIORITY)
+**Impact:** 80-90% reduction for single node updates
+**Effort:** 16 hours
+
+- [ ] Create `generate_test_for_node` MCP tool
+- [ ] Support partial config updates
+- [ ] Implement incremental code generation
+- [ ] Add merge strategy for updating existing test files
+- [ ] Create tests for incremental generation
+- [ ] Document incremental generation workflow
+
+#### 7.7 Documentation & User Guidance (MEDIUM PRIORITY)
+**Impact:** Enables users to optimize immediately without code changes
+**Effort:** 4 hours
+
+- [ ] Create `TOKEN_OPTIMIZATION_GUIDE.md` with immediate user actions
+- [ ] Document config simplification strategies
+- [ ] Add examples for splitting large configs
+- [ ] Create caching strategies documentation
+- [ ] Add post-processing code examples
+- [ ] Document best practices workflow
+- [ ] Add token usage comparison tables
+
+**Immediate User Actions (No MCP Changes Required):**
+1. Simplify configs before sending (6,000 tokens saved)
+2. Split large configs into smaller flows (5,000-10,000 tokens saved)
+3. Cache and reuse generated code (20,000 tokens saved per skip)
+4. Post-process generated code to use file loading
+5. Cache documentation locally (1,500 tokens saved)
+
+### Success Criteria
+- ✅ Token usage reduced by at least 50% for typical generation (10,000-node config)
+- ✅ Default response mode uses ≤5,000 tokens
+- ✅ Documentation separated from code generation
+- ✅ All 153 tests still passing
+- ✅ Comprehensive token optimization guide created
+- ✅ Cost comparison documented (before/after)
+- ✅ User can choose response verbosity level
+
+### Estimated Impact
+
+**Per Generation (20-node config):**
+| Metric | Current | After Phase 7 | Improvement |
+|--------|---------|---------------|-------------|
+| Input Tokens | 7,500 | 500 | **93% reduction** |
+| Output Tokens | 13,100 | 4,500 | **66% reduction** |
+| Total Tokens | 20,600 | 5,000 | **76% reduction** |
+| Cost (GPT-4) | $0.62 | $0.15 | **$0.47 savings** |
+| Response Time | 15-20s | 5-7s | **60% faster** |
+
+**Enterprise Scale (100 generations/day):**
+| Period | Current Cost | Optimized Cost | Savings |
+|--------|--------------|----------------|---------|
+| Daily | $62 | $15 | $47 |
+| Monthly | $1,860 | $450 | $1,410 |
+| Annual | $22,630 | $5,475 | **$17,155** |
+
+### Implementation Priority
+
+**Phase 7a (High Priority - 2 weeks):**
+1. Remove config embedding (Task 7.1) - 2 hours
+2. Add response mode parameter (Task 7.2) - 4 hours
+3. Create documentation (Task 7.7) - 4 hours
+**Total Effort:** 10 hours
+**Expected Savings:** 6,500 tokens/generation (68% reduction)
+
+**Phase 7b (Medium Priority - 3 weeks):**
+4. Separate documentation tool (Task 7.3) - 6 hours
+5. Cost estimation (Task 7.4) - 3 hours
+**Total Effort:** 9 hours
+**Expected Additional Savings:** 1,500 tokens/generation
+
+**Phase 7c (Low Priority - 4 weeks):**
+6. Config utilities (Task 7.5) - 8 hours
+7. Incremental generation (Task 7.6) - 16 hours
+**Total Effort:** 24 hours
+**Expected Additional Savings:** 500-1,000 tokens/generation
+
+### Estimated Files
+
+**New Files:**
+- `docs/TOKEN_OPTIMIZATION_GUIDE.md` - User-facing optimization guide
+- `src/flowsphere_mcp/utils/config_optimizer.py` - Config compression utilities
+- `tests/test_token_optimization.py` - Token usage validation tests
+
+**Modified Files:**
+- `src/flowsphere_mcp/server.py` - Add response_mode parameter, new doc tool
+- `src/flowsphere_mcp/generators/base_generator.py` - Response mode support
+- `src/flowsphere_mcp/generators/csharp_generator.py` - Remove embedding
+- `src/flowsphere_mcp/generators/python_generator.py` - Remove embedding
+- `src/flowsphere_mcp/generators/javascript_generator.py` - Remove embedding
+- All template files - Update to load config from files
+- `README.md` - Document optimization features
+
+### Testing Strategy
+
+- [ ] Measure token usage before/after for all test fixtures
+- [ ] Validate generated code still works with file-based config
+- [ ] Test all three response modes
+- [ ] Verify documentation tool returns correct content
+- [ ] Create token usage regression tests
+- [ ] Test with large configs (1MB+, 50+ nodes)
+- [ ] Benchmark generation time improvements
+
+---
+
+## 🔮 Future Enhancements (Phase 8+)
 
 ### Advanced Features
 - [ ] **Custom Template Overrides** - Allow users to provide custom Jinja2 templates
@@ -437,9 +661,10 @@ This document outlines the development phases for the FlowSphere MCP Server code
 
 ## Current Status
 
-**Completed Phases:** 5 / 6 (83%)
+**Completed Phases:** 5 / 7 (71%)
 **Current Phase:** Phase 6 (Publishing & Distribution)
-**Progress:** Phase 5 completed with full C# support (xUnit, NUnit, SpecFlow). All major code generation features complete. Ready for Phase 6 (Publishing).
+**Next Phase:** Phase 7 (Token Efficiency & Performance Optimization)
+**Progress:** Phase 5 completed with full C# support (xUnit, NUnit, SpecFlow). All major code generation features complete. Ready for Phase 6 (Publishing) and Phase 7 (Token Optimization - Critical for production use).
 
 **Project Metrics:**
 - Total Files: 50+
@@ -510,8 +735,10 @@ This document outlines the development phases for the FlowSphere MCP Server code
 - ✅ User testing guide and demo script
 - ✅ Publishing configuration for PyPI and Smithery
 
-**Next Milestone:**
+**Next Milestones:**
 - **Phase 6:** Publishing & Distribution (PyPI, Smithery, GitHub releases)
+- **Phase 7:** Token Efficiency & Performance Optimization (50-75% token reduction, $17K+ annual enterprise savings)
+  - See `MCP_GENERATION_REPORT.md` for detailed analysis
 
 ---
 
