@@ -2,11 +2,11 @@
   "name": "flowsphere-mcp-server",
   "version": "1.0.0",
   "description": "Generate production-ready test code (Python pytest/behave, JavaScript Jest) from FlowSphere configurations. Supports all 18 FlowSphere features including HTTP execution, variable substitution, conditions, validations, and more.",
-  "author": "Your Name",
-  "homepage": "https://github.com/yourusername/flowsphere-mcp-server",
+  "author": "Yannis Moudilos",
+  "homepage": "https://github.com/ymoud/flowsphere-mcp",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/flowsphere-mcp-server.git"
+    "url": "https://github.com/ymoud/flowsphere-mcp.git"
   },
   "license": "MIT",
   "tags": [

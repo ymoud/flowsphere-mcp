@@ -12,12 +12,12 @@ long_description = readme_file.read_text(encoding="utf-8") if readme_file.exists
 setup(
     name="flowsphere-mcp-server",
     version="1.0.0",
-    author="Your Name",
-    author_email="your.email@example.com",
+    author="Yannis Moudilos",
+    author_email="jmoudilos@gmail.com",
     description="Generate production-ready test code from FlowSphere configurations",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/flowsphere-mcp-server",
+    url="https://github.com/ymoud/flowsphere-mcp",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     include_package_data=True,
@@ -56,8 +56,8 @@ setup(
     ],
     keywords="mcp flowsphere testing code-generation pytest jest behave bdd api-testing",
     project_urls={
-        "Bug Reports": "https://github.com/yourusername/flowsphere-mcp-server/issues",
-        "Source": "https://github.com/yourusername/flowsphere-mcp-server",
-        "Documentation": "https://github.com/yourusername/flowsphere-mcp-server/blob/main/README.md",
+        "Bug Reports": "https://github.com/ymoud/flowsphere-mcp/issues",
+        "Source": "https://github.com/ymoud/flowsphere-mcp",
+        "Documentation": "https://github.com/ymoud/flowsphere-mcp/blob/main/README.md",
     },
 )
