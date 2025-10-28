@@ -636,3 +636,108 @@ def generate_javascript_mocha(config_str: str, **options) -> str:
     generator = JavaScriptMochaGenerator()
     config = generator.load_config(config_str)
     return generator.generate(config, **options)
+
+
+
+class JavaScriptCucumberGenerator(BaseGenerator):
+    """
+    Generator for JavaScript Cucumber/BDD test code.
+
+    Produces:
+    1. Gherkin feature file (.feature) with test scenarios
+    2. Step definitions file (.js) with cucumber-js steps
+    """
+
+    def __init__(self):
+        super().__init__()
+
+    def get_language_name(self) -> str:
+        return "JavaScript"
+
+    def get_framework_name(self) -> str:
+        return "Cucumber"
+
+    def get_required_dependencies(self) -> list[str]:
+        return [
+            "@cucumber/cucumber@^10.0.0",
+            "axios@^1.6.0",
+            "jsonpath-plus@^7.2.0",
+            "uuid@^9.0.0",
+            "chai@^4.3.0"
+        ]
+
+    def generate(self, config: Dict[str, Any], **options) -> Dict[str, str]:
+        is_valid, error_msg = self.validate_config(config)
+        if not is_valid:
+            raise ValueError(f"Invalid configuration: {error_msg}")
+
+        feature_name = options.get('feature_name')
+        if not feature_name:
+            config_name = config.get('name', 'API Test')
+            feature_name = self._sanitize_feature_name(config_name)
+
+        context = {
+            'config': config,
+            'config_json': json.dumps(config, indent=4),
+            'feature_name': feature_name,
+            'generation_timestamp': datetime.now().isoformat(),
+            'include_comments': options.get('include_comments', True)
+        }
+
+        feature_template = self.load_template('javascript/cucumber_feature_template.jinja2')
+        feature_code = self.render_template(feature_template, context)
+        feature_code = self.format_gherkin(feature_code)
+
+        steps_template = self.load_template('javascript/cucumber_steps_template.jinja2')
+        steps_code = self.render_template(steps_template, context)
+        steps_code = self.format_code(steps_code)
+
+        return {'feature': feature_code, 'steps': steps_code}
+
+    def _sanitize_feature_name(self, name: str) -> str:
+        name = re.sub(r'[^a-z0-9]+', '_', name.lower())
+        name = name.strip('_')
+        return name if name else 'api_test'
+
+    def format_gherkin(self, code: str) -> str:
+        code = re.sub(r'\n{3,}', '\n\n', code)
+        return code.rstrip() + '\n'
+
+    def format_code(self, code: str) -> str:
+        code = re.sub(r'\n{4,}', '\n\n\n', code)
+        return code.rstrip() + '\n'
+
+    def validate_generated_code(self, feature: str, steps: str) -> tuple[bool, Optional[str]]:
+        if 'Feature:' not in feature:
+            return False, "Missing Feature declaration"
+        if 'Scenario:' not in feature:
+            return False, "Missing Scenario"
+        if 'class APIWorld' not in steps:
+            return False, "Missing APIWorld class"
+        return True, None
+
+    def get_package_json_template(self, project_name: str = "flowsphere-tests") -> str:
+        deps = {}
+        for dep in self.get_required_dependencies():
+            if '@' in dep and not dep.startswith('@'):
+                name, version = dep.split('@', 1)
+                deps[name] = version
+            elif dep.startswith('@'):
+                parts = dep.split('@')
+                if len(parts) >= 3:
+                    name = '@' + parts[1]
+                    version = '@'.join(parts[2:])
+                    deps[name] = version
+        package = {
+            "name": project_name,
+            "version": "1.0.0",
+            "scripts": {"test": "cucumber-js"},
+            "devDependencies": deps
+        }
+        return json.dumps(package, indent=2)
+
+
+def generate_javascript_cucumber(config_str: str, **options) -> Dict[str, str]:
+    generator = JavaScriptCucumberGenerator()
+    config = generator.load_config(config_str)
+    return generator.generate(config, **options)

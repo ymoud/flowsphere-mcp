@@ -14,7 +14,7 @@ from schema.config_schema import get_schema_documentation
 from schema.features import get_feature_documentation, get_feature_checklist
 from generators.python_generator import PythonPytestGenerator
 from generators.behave_generator import PythonBehaveGenerator
-from generators.javascript_generator import JavaScriptJestGenerator, JavaScriptMochaGenerator
+from generators.javascript_generator import JavaScriptJestGenerator, JavaScriptMochaGenerator, JavaScriptCucumberGenerator
 
 
 # Initialize MCP server
@@ -124,6 +124,24 @@ async def list_tools() -> list[Tool]:
                     "test_class_name": {
                         "type": "string",
                         "description": "Optional: Custom name for the test class (auto-generated if not provided)"
+                    }
+                },
+                "required": ["config"]
+            }
+        ),
+        Tool(
+            name="generate_javascript_cucumber",
+            description="Generate production-ready JavaScript Cucumber/BDD code from a FlowSphere configuration. Produces Gherkin feature files and cucumber-js step definitions. Supports all 18 FlowSphere features. Perfect for BDD-style testing and living documentation.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "config": {
+                        "type": "object",
+                        "description": "FlowSphere configuration object with nodes, defaults, variables, etc."
+                    },
+                    "feature_name": {
+                        "type": "string",
+                        "description": "Optional: Custom name for the feature file (auto-generated if not provided)"
                     }
                 },
                 "required": ["config"]
@@ -363,6 +381,62 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 "dependencies": generator.get_required_dependencies(),
                 "usage_instructions": generator.get_usage_instructions(),
                 "package_json": generator.get_package_json_template()
+            }
+
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(result, indent=2)
+                )
+            ]
+
+        except ValueError as e:
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps({
+                        "status": "error",
+                        "error": str(e)
+                    }, indent=2)
+                )
+            ]
+        except Exception as e:
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps({
+                        "status": "error",
+                        "error": f"Code generation failed: {str(e)}"
+                    }, indent=2)
+                )
+            ]
+
+    elif name == "generate_javascript_cucumber":
+        try:
+            config = arguments.get("config")
+            if not config:
+                raise ValueError("Missing required argument: config")
+
+            # Initialize generator
+            generator = JavaScriptCucumberGenerator()
+
+            # Generate code
+            options = {}
+            if "feature_name" in arguments:
+                options["feature_name"] = arguments["feature_name"]
+
+            generated = generator.generate(config, **options)
+
+            # Return generated code with metadata
+            result = {
+                "status": "success",
+                "language": generator.get_language_name(),
+                "framework": generator.get_framework_name(),
+                "feature": generated["feature"],
+                "steps": generated["steps"],
+                "dependencies": generator.get_required_dependencies(),
+                "package_json": generator.get_package_json_template(),
+                "note": "Save feature file as *.feature and steps file as *_steps.js in features/step_definitions/ directory"
             }
 
             return [
