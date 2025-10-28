@@ -15,6 +15,7 @@ from schema.features import get_feature_documentation, get_feature_checklist
 from generators.python_generator import PythonPytestGenerator
 from generators.behave_generator import PythonBehaveGenerator
 from generators.javascript_generator import JavaScriptJestGenerator, JavaScriptMochaGenerator, JavaScriptCucumberGenerator
+from generators.csharp_generator import CSharpXUnitGenerator
 
 
 # Initialize MCP server
@@ -142,6 +143,28 @@ async def list_tools() -> list[Tool]:
                     "feature_name": {
                         "type": "string",
                         "description": "Optional: Custom name for the feature file (auto-generated if not provided)"
+                    }
+                },
+                "required": ["config"]
+            }
+        ),
+        Tool(
+            name="generate_csharp_xunit",
+            description="Generate production-ready C# xUnit code from a FlowSphere configuration. Uses xUnit test framework with async/await and HttpClient. Supports all 18 FlowSphere features including HTTP execution, variable substitution, conditions, validations, and more.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "config": {
+                        "type": "object",
+                        "description": "FlowSphere configuration object with nodes, defaults, variables, etc."
+                    },
+                    "test_class_name": {
+                        "type": "string",
+                        "description": "Optional: Custom name for the test class (auto-generated if not provided)"
+                    },
+                    "namespace": {
+                        "type": "string",
+                        "description": "Optional: Namespace for the test class (default: FlowSphere.Tests)"
                     }
                 },
                 "required": ["config"]
@@ -437,6 +460,63 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 "dependencies": generator.get_required_dependencies(),
                 "package_json": generator.get_package_json_template(),
                 "note": "Save feature file as *.feature and steps file as *_steps.js in features/step_definitions/ directory"
+            }
+
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(result, indent=2)
+                )
+            ]
+
+        except ValueError as e:
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps({
+                        "status": "error",
+                        "error": str(e)
+                    }, indent=2)
+                )
+            ]
+        except Exception as e:
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps({
+                        "status": "error",
+                        "error": f"Code generation failed: {str(e)}"
+                    }, indent=2)
+                )
+            ]
+
+    elif name == "generate_csharp_xunit":
+        try:
+            config = arguments.get("config")
+            if not config:
+                raise ValueError("Missing required argument: config")
+
+            # Initialize generator
+            generator = CSharpXUnitGenerator()
+
+            # Generate code
+            options = {}
+            if "test_class_name" in arguments:
+                options["test_class_name"] = arguments["test_class_name"]
+            if "namespace" in arguments:
+                options["namespace"] = arguments["namespace"]
+
+            generated_code = generator.generate(config, **options)
+
+            # Return generated code with metadata
+            result = {
+                "status": "success",
+                "language": generator.get_language_name(),
+                "framework": generator.get_framework_name(),
+                "code": generated_code,
+                "dependencies": generator.get_required_dependencies(),
+                "usage_instructions": generator.get_usage_instructions(),
+                "csproj": generator.get_csproj_template()
             }
 
             return [
