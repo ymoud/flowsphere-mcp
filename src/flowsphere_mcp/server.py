@@ -16,6 +16,7 @@ from generators.python_generator import PythonPytestGenerator
 from generators.behave_generator import PythonBehaveGenerator
 from generators.javascript_generator import JavaScriptJestGenerator, JavaScriptMochaGenerator, JavaScriptCucumberGenerator
 from generators.csharp_generator import CSharpXUnitGenerator, CSharpNUnitGenerator, CSharpSpecFlowGenerator
+from utils.report_generator import ReportGenerator
 
 
 # Initialize MCP server
@@ -71,6 +72,14 @@ async def list_tools() -> list[Tool]:
                     "test_class_name": {
                         "type": "string",
                         "description": "Optional: Custom name for the test class (auto-generated if not provided)"
+                    },
+                    "generate_report": {
+                        "type": "boolean",
+                        "description": "Optional: Generate comprehensive generation report with metrics, token usage, cost analysis, and optimization tips (default: false)"
+                    },
+                    "save_report_to": {
+                        "type": "string",
+                        "description": "Optional: File path to save the generation report (e.g., 'reports/generation_report.md'). If not provided, report is only returned in the response."
                     }
                 },
                 "required": ["config"]
@@ -89,6 +98,14 @@ async def list_tools() -> list[Tool]:
                     "feature_name": {
                         "type": "string",
                         "description": "Optional: Custom name for the feature file (auto-generated if not provided)"
+                    },
+                    "generate_report": {
+                        "type": "boolean",
+                        "description": "Optional: Generate comprehensive generation report with metrics, token usage, cost analysis, and optimization tips (default: false)"
+                    },
+                    "save_report_to": {
+                        "type": "string",
+                        "description": "Optional: File path to save the generation report (e.g., 'reports/generation_report.md'). If not provided, report is only returned in the response."
                     }
                 },
                 "required": ["config"]
@@ -107,6 +124,14 @@ async def list_tools() -> list[Tool]:
                     "test_class_name": {
                         "type": "string",
                         "description": "Optional: Custom name for the test class (auto-generated if not provided)"
+                    },
+                    "generate_report": {
+                        "type": "boolean",
+                        "description": "Optional: Generate comprehensive generation report with metrics, token usage, cost analysis, and optimization tips (default: false)"
+                    },
+                    "save_report_to": {
+                        "type": "string",
+                        "description": "Optional: File path to save the generation report (e.g., 'reports/generation_report.md'). If not provided, report is only returned in the response."
                     }
                 },
                 "required": ["config"]
@@ -125,6 +150,14 @@ async def list_tools() -> list[Tool]:
                     "test_class_name": {
                         "type": "string",
                         "description": "Optional: Custom name for the test class (auto-generated if not provided)"
+                    },
+                    "generate_report": {
+                        "type": "boolean",
+                        "description": "Optional: Generate comprehensive generation report with metrics, token usage, cost analysis, and optimization tips (default: false)"
+                    },
+                    "save_report_to": {
+                        "type": "string",
+                        "description": "Optional: File path to save the generation report (e.g., 'reports/generation_report.md'). If not provided, report is only returned in the response."
                     }
                 },
                 "required": ["config"]
@@ -143,6 +176,14 @@ async def list_tools() -> list[Tool]:
                     "feature_name": {
                         "type": "string",
                         "description": "Optional: Custom name for the feature file (auto-generated if not provided)"
+                    },
+                    "generate_report": {
+                        "type": "boolean",
+                        "description": "Optional: Generate comprehensive generation report with metrics, token usage, cost analysis, and optimization tips (default: false)"
+                    },
+                    "save_report_to": {
+                        "type": "string",
+                        "description": "Optional: File path to save the generation report (e.g., 'reports/generation_report.md'). If not provided, report is only returned in the response."
                     }
                 },
                 "required": ["config"]
@@ -165,6 +206,14 @@ async def list_tools() -> list[Tool]:
                     "namespace": {
                         "type": "string",
                         "description": "Optional: Namespace for the test class (default: FlowSphere.Tests)"
+                    },
+                    "generate_report": {
+                        "type": "boolean",
+                        "description": "Optional: Generate comprehensive generation report with metrics, token usage, cost analysis, and optimization tips (default: false)"
+                    },
+                    "save_report_to": {
+                        "type": "string",
+                        "description": "Optional: File path to save the generation report (e.g., 'reports/generation_report.md'). If not provided, report is only returned in the response."
                     }
                 },
                 "required": ["config"]
@@ -187,6 +236,14 @@ async def list_tools() -> list[Tool]:
                     "namespace": {
                         "type": "string",
                         "description": "Optional: Namespace for the test class (default: FlowSphere.Tests)"
+                    },
+                    "generate_report": {
+                        "type": "boolean",
+                        "description": "Optional: Generate comprehensive generation report with metrics, token usage, cost analysis, and optimization tips (default: false)"
+                    },
+                    "save_report_to": {
+                        "type": "string",
+                        "description": "Optional: File path to save the generation report (e.g., 'reports/generation_report.md'). If not provided, report is only returned in the response."
                     }
                 },
                 "required": ["config"]
@@ -213,12 +270,72 @@ async def list_tools() -> list[Tool]:
                     "namespace": {
                         "type": "string",
                         "description": "Optional: Namespace for the test class (default: FlowSphere.Tests)"
+                    },
+                    "generate_report": {
+                        "type": "boolean",
+                        "description": "Optional: Generate comprehensive generation report with metrics, token usage, cost analysis, and optimization tips (default: false)"
+                    },
+                    "save_report_to": {
+                        "type": "string",
+                        "description": "Optional: File path to save the generation report (e.g., 'reports/generation_report.md'). If not provided, report is only returned in the response."
                     }
                 },
                 "required": ["config"]
             }
         )
     ]
+
+
+def handle_report_generation(config: dict, generated_code: dict, language: str, framework: str,
+                             generate_report: bool, save_report_to: str = None,
+                             generation_duration: float = None) -> dict:
+    """
+    Handle report generation and optional file saving.
+
+    Args:
+        config: FlowSphere configuration dictionary
+        generated_code: Dictionary of filename -> code content
+        language: Programming language
+        framework: Test framework
+        generate_report: Whether to generate report
+        save_report_to: Optional file path to save report
+        generation_duration: Time taken to generate code (seconds)
+
+    Returns:
+        Dictionary with report and save status (empty if generate_report is False)
+    """
+    if not generate_report:
+        return {}
+
+    try:
+        # Create report generator
+        report_gen = ReportGenerator(language, framework)
+
+        # Generate report
+        report = report_gen.generate_report(config, generated_code, generation_duration)
+
+        result = {
+            'generation_report': report,
+            'report_preview': report[:500] + '...' if len(report) > 500 else report
+        }
+
+        # Save report to file if path provided
+        if save_report_to:
+            save_result = report_gen.save_report(report, save_report_to)
+            result['report_saved'] = save_result['success']
+            if save_result['success']:
+                result['report_path'] = save_result['path']
+                result['report_size_kb'] = save_result['size_kb']
+            else:
+                result['report_save_error'] = save_result['error']
+
+        return result
+
+    except Exception as e:
+        return {
+            'report_generation_error': str(e),
+            'report_generated': False
+        }
 
 
 @app.call_tool()
