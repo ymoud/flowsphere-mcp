@@ -231,7 +231,7 @@ This document outlines the development phases for the FlowSphere MCP Server code
 - [ ] Support HttpClient for requests
 - [ ] Generate async/await Task-based code
 - [ ] Handle Newtonsoft.Json for JSON parsing
-- [ ] .NET 6+ compatibility
+- [ ] .NET 8+ compatibility
 
 #### 5.3 Implement MCP Tools
 - [ ] Add `generate_csharp_xunit` tool

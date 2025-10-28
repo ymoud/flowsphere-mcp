@@ -1,5 +1,5 @@
 """
-Tests for JavaScript Jest code generator.
+Tests for JavaScript code generators (Jest and Mocha).
 
 Tests code generation from FlowSphere configurations.
 """
@@ -12,7 +12,7 @@ import sys
 # Add src directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src' / 'flowsphere_mcp'))
 
-from generators.javascript_generator import JavaScriptJestGenerator
+from generators.javascript_generator import JavaScriptJestGenerator, JavaScriptMochaGenerator
 from generators.base_generator import BaseGenerator
 
 
