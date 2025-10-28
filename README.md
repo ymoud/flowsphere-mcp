@@ -9,349 +9,253 @@
 
 **Model Context Protocol (MCP) Server for FlowSphere Code Generation**
 
-This MCP server provides deep schema knowledge and code generation templates to help AI agents generate executable code in multiple programming languages from FlowSphere configuration files.
+Transform [FlowSphere](https://github.com/ymoud/flowsphere) configuration files into production-ready test code in **Python**, **JavaScript**, and **C#**.
+
+---
 
 ## What It Does
 
-Transforms FlowSphere config files (JSON) into standalone, production-ready test code in:
-- **Python** - ✅ pytest, ✅ behave/BDD
-- **JavaScript** - ✅ Jest, ✅ Mocha, ✅ Cucumber/BDD
-- **C#** - ✅ xUnit, ✅ NUnit, ✅ SpecFlow/BDD
+Generates standalone, executable test code from FlowSphere JSON configurations:
 
-## Architecture
+- **Python** - pytest, behave/BDD
+- **JavaScript** - Jest, Mocha, Cucumber/BDD
+- **C#** - xUnit, NUnit, SpecFlow/BDD
 
-The MCP server follows a **Schema + Templates** approach:
+**Example:** A 20-line JSON config becomes 400+ lines of working test code with full HTTP execution, variable substitution, conditions, and validations.
 
-1. **Schema Documentation Provider** - Complete knowledge of FlowSphere config structure
-2. **Code Template Library** - Pre-built, battle-tested code snippets for each language
-3. **Code Generator Engine** - Combines schema + templates to generate working code
+---
 
-## Installation
+## ✨ Quick Start
+
+### Option 1: Use with Claude Code CLI (Recommended)
 
 ```bash
-# Install dependencies
+# 1. Install dependencies
+cd C:\dev\GitHub\flowsphere-mcp-server
 pip install -r requirements.txt
 
-# Run the MCP server
-python src/flowsphere_mcp/server.py
+# 2. Add MCP server to Claude Code
+claude mcp add --transport stdio flowsphere-mcp python "C:\dev\GitHub\flowsphere-mcp-server\src\flowsphere_mcp\server.py"
+
+# 3. Restart Claude Code
+claude
+
+# 4. Verify connection
+/mcp
+# Should show: flowsphere-mcp ✓ Connected
 ```
 
-## Usage with AI Agents
-
-Once the server is running, AI agents (like Claude Code) can use it to generate code:
-
+Now ask Claude to generate tests:
 ```
-User: "Generate Python pytest code from config.json"
-AI: [Uses MCP server to read schema, get templates, generate complete Python code]
-
-User: "Create Cucumber BDD tests from this config"
-AI: [Generates Gherkin feature file + behave step definitions]
+"Generate Python pytest code from tests/fixtures/simple_config.json"
+"Create JavaScript Jest tests from this FlowSphere config"
+"Generate C# xUnit tests with namespace MyApp.Tests"
 ```
 
-### Example: Python pytest Code Generation
-
-The MCP server provides the `generate_python_pytest` tool that AI agents can call:
+### Option 2: Use Python API Directly
 
 ```python
-# AI agent calls the MCP tool with a FlowSphere config
-result = mcp_server.call_tool(
-    "generate_python_pytest",
-    {
-        "config": {
-            "name": "My API Test",
-            "defaults": {
-                "baseUrl": "https://api.example.com",
-                "headers": {"Content-Type": "application/json"}
-            },
-            "nodes": [
-                {
-                    "id": "get_users",
-                    "name": "Get all users",
-                    "method": "GET",
-                    "url": "/users"
-                }
-            ]
-        }
-    }
-)
+import json
+from flowsphere_mcp.generators.python_generator import PythonPytestGenerator
 
-# Returns complete, runnable Python pytest code
-print(result["code"])
+# Load your FlowSphere config
+with open('tests/fixtures/simple_config.json') as f:
+    config = json.load(f)
+
+# Generate Python pytest code
+generator = PythonPytestGenerator()
+code = generator.generate(config)
+
+# Save to file
+with open('test_api.py', 'w') as f:
+    f.write(code)
+
+print("✅ Generated test_api.py")
 ```
 
-The generated code includes:
-- Complete `APISequence` base class with all FlowSphere features
-- Test class extending APISequence
-- Full variable substitution ({{ $guid }}, {{ .vars.x }}, etc.)
-- Condition evaluation
-- Response validation
-- HTTP request execution
+---
 
-### Running Generated Tests
+## 📦 Installation & Setup
+
+### Prerequisites
+
+- **Python 3.10+**
+- **pip** (Python package manager)
+
+### Install Dependencies
 
 ```bash
-# Save generated code
-cat > test_api.py << 'EOF'
-# [Generated code from MCP server]
-EOF
+cd C:\dev\GitHub\flowsphere-mcp-server
+pip install -r requirements.txt
+```
 
+### Configure MCP Server (Claude Code CLI)
+
+```bash
+# Add the server
+claude mcp add --transport stdio flowsphere-mcp python "C:\path\to\flowsphere-mcp-server\src\flowsphere_mcp\server.py"
+
+# Verify configuration
+claude mcp list
+
+# Get server details
+claude mcp get flowsphere-mcp
+
+# Restart Claude Code to connect
+claude
+```
+
+**Configuration saved to:** `%USERPROFILE%\.claude.json`
+
+### Troubleshooting MCP Connection
+
+If the server shows "Failed to connect":
+
+1. **Verify Python packages:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Check server path:**
+   ```bash
+   claude mcp get flowsphere-mcp
+   ```
+   Path should use backslashes: `C:\path\to\...`
+
+3. **Re-add server if needed:**
+   ```bash
+   claude mcp remove flowsphere-mcp -s local
+   claude mcp add --transport stdio flowsphere-mcp python "C:\correct\path\src\flowsphere_mcp\server.py"
+   ```
+
+4. **Restart Claude Code** to pick up changes
+
+---
+
+## 🚀 Usage
+
+### All 8 Supported Generators
+
+| Language | Framework | MCP Tool | Output |
+|----------|-----------|----------|--------|
+| Python | pytest | `generate_python_pytest` | Single test file |
+| Python | behave (BDD) | `generate_python_behave` | Feature + steps |
+| JavaScript | Jest | `generate_javascript_jest` | Test + package.json |
+| JavaScript | Mocha | `generate_javascript_mocha` | Test + package.json |
+| JavaScript | Cucumber (BDD) | `generate_javascript_cucumber` | Feature + steps |
+| C# | xUnit | `generate_csharp_xunit` | Test + .csproj |
+| C# | NUnit | `generate_csharp_nunit` | Test + .csproj |
+| C# | SpecFlow (BDD) | `generate_csharp_specflow` | Feature + steps |
+
+### Example: Python pytest
+
+```python
+# Via MCP tool
+result = mcp_server.call_tool("generate_python_pytest", {
+    "config": your_flowsphere_config,
+    "test_class_name": "APITests"  # Optional
+})
+
+# Generated output includes:
+# - Complete APISequence class with all 18 FlowSphere features
+# - Test class with all test methods
+# - Variable substitution, conditions, validations
+# - Dependencies list and usage instructions
+```
+
+**Run the generated tests:**
+```bash
+pip install pytest requests jsonpath-ng
+pytest test_api.py -v
+```
+
+### Example: JavaScript Jest
+
+```javascript
+// Via MCP tool
+result = mcp_server.call_tool("generate_javascript_jest", {
+    "config": your_flowsphere_config
+})
+
+// Returns:
+// - result.code: Complete Jest test file
+// - result.package_json: NPM dependencies
+// - result.usage_instructions: How to run
+```
+
+**Run the generated tests:**
+```bash
+npm install
+npm test
+```
+
+### Example: C# xUnit
+
+```csharp
+// Via MCP tool
+result = mcp_server.call_tool("generate_csharp_xunit", {
+    "config": your_flowsphere_config,
+    "namespace": "MyApp.Tests"  // Optional
+})
+
+// Returns:
+// - result.code: Complete xUnit test file
+// - result.csproj: Project file with NuGet packages
+// - result.usage_instructions: How to run
+```
+
+**Run the generated tests:**
+```bash
+dotnet test
+```
+
+### Example Configs
+
+See **[tests/fixtures/](tests/fixtures/)** for 5 sample FlowSphere configurations:
+- `simple_config.json` - Basic GET request
+- `auth_flow_config.json` - Authentication with token extraction
+- `conditional_config.json` - Conditional execution
+- `validation_config.json` - Response validation
+- `full_features_config.json` - All 18 features
+
+**Learn more about FlowSphere:** https://github.com/ymoud/flowsphere
+
+---
+
+## 🧪 Testing Generated Code
+
+### Python pytest
+
+```bash
 # Install dependencies
 pip install pytest requests jsonpath-ng
 
 # Run tests
-pytest test_api.py -v
+pytest generated_test.py -v
 
 # Run with debug output
-pytest test_api.py -v -s
+pytest generated_test.py -v -s
 ```
 
-## Project Structure
-
-```
-flowsphere-mcp-server/
-├── src/flowsphere_mcp/
-│   ├── server.py                 # MCP server entry point (11 tools)
-│   ├── schema/
-│   │   ├── config_schema.py      # FlowSphere config schema documentation
-│   │   └── features.py           # Feature descriptions (18 features)
-│   ├── templates/
-│   │   ├── python/
-│   │   │   ├── base_template.py              # APISequence base class
-│   │   │   ├── pytest_template.jinja2        # pytest test template
-│   │   │   ├── gherkin_template.jinja2       # Gherkin feature file template
-│   │   │   └── step_definitions_template.jinja2  # behave step definitions
-│   │   ├── javascript/
-│   │   │   ├── jest_template.jinja2          # Jest test template
-│   │   │   ├── mocha_template.jinja2         # Mocha test template
-│   │   │   ├── cucumber_feature_template.jinja2  # Cucumber feature file
-│   │   │   └── cucumber_steps_template.jinja2    # Cucumber step definitions
-│   │   └── csharp/
-│   │       ├── xunit_template.jinja2         # xUnit test template
-│   │       ├── nunit_template.jinja2         # NUnit test template
-│   │       ├── specflow_feature_template.jinja2  # SpecFlow feature file
-│   │       └── specflow_steps_template.jinja2    # SpecFlow step definitions
-│   └── generators/
-│       ├── base_generator.py      # Base generator class
-│       ├── python_generator.py    # Python pytest generator
-│       ├── behave_generator.py    # Python behave/BDD generator
-│       ├── javascript_generator.py # JavaScript Jest/Mocha/Cucumber generators
-│       └── csharp_generator.py    # C# xUnit/NUnit/SpecFlow generators
-├── tests/
-│   ├── fixtures/                  # 5 test configs
-│   ├── generated_code/            # Example outputs
-│   ├── test_schema.py             # Schema tests (3 tests)
-│   ├── test_python_generator.py   # pytest generator tests (31 tests)
-│   ├── test_behave_generator.py   # behave generator tests (34 tests)
-│   ├── test_javascript_generator.py # Jest generator tests (30 tests)
-│   ├── test_mocha_generator.py    # Mocha generator tests (8 tests)
-│   ├── test_cucumber_generator.py # Cucumber generator tests (8 tests)
-│   ├── test_xunit_generator.py    # xUnit generator tests (12 tests)
-│   ├── test_nunit_generator.py    # NUnit generator tests (14 tests)
-│   └── test_specflow_generator.py # SpecFlow generator tests (13 tests)
-├── requirements.txt
-└── README.md
-```
-
-## Development Phases
-
-- **Phase 1** ✅ - Schema provider (FlowSphere config documentation)
-- **Phase 2** ✅ - Python pytest code generator (production-ready)
-- **Phase 3** ✅ - Python behave code generator (BDD/Cucumber)
-- **Phase 4** ✅ - JavaScript code generators (Jest, Mocha, Cucumber) - **COMPLETE**
-- **Phase 5** ✅ - C# code generators (xUnit, NUnit, SpecFlow) - **COMPLETE**
-- **Phase 6** 📋 - Publishing & Distribution (PyPI, Smithery)
-
-## Phase 2 Complete: Python pytest Code Generation
-
-**Status:** ✅ Complete - All 31 tests passing
-
-Phase 2 delivers production-ready Python pytest code generation with:
-- ✅ Complete support for all 18 FlowSphere features
-- ✅ Comprehensive base template with APISequence class
-- ✅ Jinja2-based code generation
-- ✅ Full validation and error handling
-- ✅ 5 test fixture configurations
-- ✅ 31 passing tests (100% coverage)
-
-## Phase 3 Complete: Python Behave/BDD Code Generation
-
-**Status:** ✅ Complete - All 34 tests passing (68 total tests)
-
-Phase 3 delivers production-ready Python behave/BDD code generation with:
-- ✅ Gherkin feature file generation with proper BDD syntax
-- ✅ Python step definitions with behave decorators (@given, @when, @then)
-- ✅ APIContext class for state management across steps
-- ✅ Complete support for all 18 FlowSphere features in BDD format
-- ✅ Human-readable test scenarios for stakeholders
-- ✅ Reusable step definitions
-- ✅ 34 comprehensive tests (100% passing)
-- ✅ Full integration with behave test runner
-
-### Example: Behave/BDD Generation
-
-```python
-# AI agent generates BDD tests
-result = mcp_server.call_tool(
-    "generate_python_behave",
-    {
-        "config": {
-            "name": "User Registration API",
-            "defaults": {
-                "baseUrl": "https://api.example.com"
-            },
-            "nodes": [
-                {
-                    "id": "register_user",
-                    "name": "Register a new user",
-                    "method": "POST",
-                    "url": "/users",
-                    "body": {
-                        "email": "test@example.com",
-                        "name": "Test User"
-                    },
-                    "validations": [
-                        {"httpStatusCode": 201},
-                        {"field": "email", "value": "test@example.com"}
-                    ]
-                }
-            ]
-        }
-    }
-)
-```
-
-**Generated Output:**
-
-1. **Gherkin Feature File** (`user_registration_api.feature`):
-```gherkin
-Feature: User Registration API
-
-  Scenario: Register a new user
-    When I execute POST request to "/users" with body
-    And I set the request body to:
-      """
-      {
-        "email": "test@example.com",
-        "name": "Test User"
-      }
-      """
-    Then the response status code should be 201
-    And the response field "email" should be "test@example.com"
-```
-
-2. **Step Definitions** (`user_registration_api_steps.py`):
-- Complete APIContext class with variable substitution
-- Behave decorators for all steps
-- HTTP request execution
-- Response validation
-- All FlowSphere features supported
-
-### Running Generated Behave Tests
+### Python behave (BDD)
 
 ```bash
-# Organize files
-mkdir -p features/steps
-mv user_registration_api.feature features/
-mv user_registration_api_steps.py features/steps/
-
 # Install dependencies
 pip install behave requests jsonpath-ng
 
+# Organize files
+mkdir -p features/steps
+mv *.feature features/
+mv *_steps.py features/steps/
+
 # Run tests
-behave
-
-# Run with verbose output
 behave -v
-
-# Run specific scenario
-behave -n "Register a new user"
 ```
 
-## Phase 4 Complete: JavaScript Code Generation (Jest, Mocha, Cucumber)
-
-**Status:** ✅ Complete - All 46 tests passing (114 total tests)
-
-Phase 4 delivers production-ready JavaScript code generation with three frameworks:
-
-### Framework Overview
-- **Jest** (30 tests) - Modern testing with expect assertions
-- **Mocha** (8 tests) - Traditional testing with Chai assertions
-- **Cucumber** (8 tests) - BDD/Gherkin for living documentation
-
-### Common Features (All Frameworks)
-- ✅ Modern ES6+ syntax with async/await
-- ✅ Complete APISequence/APIWorld class with all FlowSphere features
-- ✅ axios for HTTP requests
-- ✅ JSONPath support for response validation
-- ✅ Complete package.json generation
-- ✅ Full support for all 18 FlowSphere features
-
-### Example: JavaScript Jest Generation
-
-```javascript
-// AI agent generates Jest tests
-result = mcp_server.call_tool(
-    "generate_javascript_jest",
-    {
-        "config": {
-            "name": "Product API Tests",
-            "defaults": {
-                "baseUrl": "https://api.store.com",
-                "headers": {"Authorization": "Bearer token123"}
-            },
-            "nodes": [
-                {
-                    "id": "get_products",
-                    "name": "Get all products",
-                    "method": "GET",
-                    "url": "/products",
-                    "validations": [
-                        {"httpStatusCode": 200},
-                        {"field": "$[0].name", "operator": "exists"}
-                    ]
-                }
-            ]
-        }
-    }
-)
-```
-
-**Generated Output:**
-
-1. **Jest Test File** (`product_api_tests.test.js`):
-```javascript
-const axios = require('axios');
-const jp = require('jsonpath');
-
-class APISequence {
-    constructor(config) {
-        this.config = config;
-        this.responses = {};
-        this.variables = {};
-    }
-
-    // Complete implementation with all 18 FlowSphere features
-    async executeNode(node) { /* ... */ }
-    substituteVariables(text) { /* ... */ }
-    evaluateCondition(condition) { /* ... */ }
-    validateResponse(response, validations) { /* ... */ }
-}
-
-describe('Product API Tests', () => {
-    test('Get all products', async () => {
-        const sequence = new APISequence(config);
-        await sequence.executeNode(nodes[0]);
-        // Validations automatically applied
-    });
-});
-```
-
-2. **Package.json** - Complete with all dependencies
-
-### Running Generated Jest Tests
+### JavaScript Jest
 
 ```bash
-# Install dependencies
+# Install dependencies (from generated package.json)
 npm install
 
 # Run tests
@@ -359,71 +263,23 @@ npm test
 
 # Run with coverage
 npm test -- --coverage
-
-# Run specific test
-npm test -- -t "Get all products"
 ```
 
-### Mocha + Chai Generation
+### JavaScript Mocha
 
-**Differences from Jest:**
-- Uses `describe` and `it` (instead of `test`)
-- Uses Chai `expect` assertions
-- Includes `beforeEach` hooks
-- Configurable timeout with `this.timeout()`
-
-**Example Usage:**
-```javascript
-result = mcp_server.call_tool("generate_javascript_mocha", {"config": flowsphere_config})
-```
-
-**Generated Output:**
-- Complete Mocha test file with Chai assertions
-- APISequence class with all features
-- Package.json with mocha, chai, axios, jsonpath-plus
-
-**Running Mocha Tests:**
 ```bash
+# Install dependencies
 npm install --save-dev mocha chai axios jsonpath-plus uuid
-npm test  # or: npx mocha test_file.test.js
+
+# Run tests
+npx mocha test_file.test.js
 ```
 
-### Cucumber/BDD Generation
+### JavaScript Cucumber
 
-**BDD Features:**
-- Gherkin feature files with human-readable scenarios
-- Step definitions with Given/When/Then
-- APIWorld class for state management
-- Living documentation for stakeholders
-- Reusable steps across features
-
-**Example Usage:**
-```javascript
-result = mcp_server.call_tool("generate_javascript_cucumber", {"config": flowsphere_config})
-// Returns: result.feature and result.steps
-```
-
-**Generated Output:**
-
-1. **Feature File** (`api_test.feature`):
-```gherkin
-Feature: Product API Tests
-
-  Scenario: Get all products
-    When I execute GET request to "/products"
-    Then the response status code should be 200
-    And the response field "$[0].name" should be "Product 1"
-```
-
-2. **Step Definitions** (`api_test_steps.js`):
-- APIWorld class with context management
-- Given/When/Then step implementations
-- Full variable substitution support
-- Response validation with Chai
-
-**Running Cucumber Tests:**
 ```bash
-npm install --save-dev @cucumber/cucumber axios jsonpath-plus uuid chai
+# Install dependencies
+npm install --save-dev @cucumber/cucumber axios jsonpath-plus chai
 
 # Organize files
 mkdir -p features/step_definitions
@@ -434,425 +290,435 @@ mv *_steps.js features/step_definitions/
 npx cucumber-js
 ```
 
-## Phase 5 Complete: C# Code Generation (xUnit, NUnit, SpecFlow)
-
-**Status:** ✅ Complete - All 39 tests passing (153 total tests)
-
-Phase 5 delivers production-ready C# code generation with three frameworks:
-
-### Framework Overview
-- **xUnit** (12 tests) - Modern .NET testing with Fact/Theory attributes
-- **NUnit** (14 tests) - Traditional .NET testing with constraint model
-- **SpecFlow** (13 tests) - BDD/Gherkin for living documentation
-
-### Common Features (All Frameworks)
-- ✅ Modern C# with async/await and HttpClient
-- ✅ Complete APISequence class with all FlowSphere features
-- ✅ HttpClient for HTTP requests
-- ✅ JSONPath support via Newtonsoft.Json.Linq
-- ✅ Complete .csproj file generation
-- ✅ Full support for all 18 FlowSphere features
-
-### Example: C# xUnit Generation
-
-```csharp
-// AI agent generates xUnit tests
-result = mcp_server.call_tool(
-    "generate_csharp_xunit",
-    {
-        "config": {
-            "name": "User API Tests",
-            "defaults": {
-                "baseUrl": "https://api.example.com",
-                "headers": {"Content-Type": "application/json"}
-            },
-            "nodes": [
-                {
-                    "id": "create_user",
-                    "name": "Create new user",
-                    "method": "POST",
-                    "url": "/users",
-                    "body": {
-                        "name": "John Doe",
-                        "email": "john@example.com"
-                    },
-                    "validations": [
-                        {"httpStatusCode": 201},
-                        {"field": "$.id", "operator": "exists"}
-                    ]
-                }
-            ]
-        },
-        "namespace": "MyApp.Tests"
-    }
-)
-```
-
-**Generated Output:**
-
-1. **xUnit Test File** (`UserApiTests.cs`):
-```csharp
-using System;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Xunit;
-using Newtonsoft.Json.Linq;
-
-namespace MyApp.Tests
-{
-    public class APISequence
-    {
-        private readonly HttpClient _httpClient;
-        private readonly Dictionary<string, object> _responses;
-
-        public APISequence(Dictionary<string, object> config) { /* ... */ }
-
-        // Complete implementation with all 18 FlowSphere features
-        public async Task<HttpResponseMessage> ExecuteNodeAsync(Dictionary<string, object> node) { /* ... */ }
-        private object SubstituteVariables(object value) { /* ... */ }
-        private bool EvaluateCondition(Dictionary<string, object> condition) { /* ... */ }
-        private void ValidateResponse(Dictionary<string, object> node, HttpResponseMessage response) { /* ... */ }
-    }
-
-    public class UserApiTests
-    {
-        [Fact]
-        public async Task Create_new_user()
-        {
-            var sequence = new APISequence(config);
-            var response = await sequence.ExecuteNodeAsync(node);
-            Assert.NotNull(response);
-        }
-    }
-}
-```
-
-2. **.csproj File** - Complete with all NuGet packages
-
-### Running Generated xUnit Tests
+### C# xUnit
 
 ```bash
 # Create project
-dotnet new xunit -n UserApiTests
-cd UserApiTests
+dotnet new xunit -n MyTests
 
-# Add packages
-dotnet add package xunit --version 2.6.0
-dotnet add package Newtonsoft.Json --version 13.0.3
-
-# Copy generated file
-# (save as UserApiTests.cs)
+# Add packages (from generated .csproj)
+dotnet add package xunit
+dotnet add package Newtonsoft.Json
 
 # Run tests
 dotnet test
-
-# Run with verbose output
-dotnet test --logger "console;verbosity=detailed"
 ```
 
-### NUnit Generation
-
-NUnit uses the constraint model for assertions:
-
-```csharp
-// NUnit uses Assert.That with constraints
-Assert.That(actualValue, Is.EqualTo(expectedValue));
-Assert.That(response.StatusCode, Is.EqualTo(200));
-Assert.That(fieldValue, Does.Contain("expected"));
-```
-
-**Key differences from xUnit:**
-- `[TestFixture]` attribute for test classes
-- `[Test]` attribute instead of `[Fact]`
-- `[SetUp]` method instead of constructor
-- Constraint model: `Assert.That(actual, Is.EqualTo(expected))`
-
-### SpecFlow/BDD Generation
-
-SpecFlow generates two files:
-
-1. **Gherkin Feature File** (`UserApi.feature`):
-```gherkin
-Feature: User API Tests
-  API testing scenarios for user management
-
-  Scenario: Create new user
-    Given I have the API base URL from configuration
-    When I execute POST request to "/users"
-    Then the response status code should be 201
-    And the response field "$.id" should exists ""
-```
-
-2. **Step Definitions** (`UserApiSteps.cs`):
-```csharp
-using TechTalk.SpecFlow;
-using NUnit.Framework;
-
-[Binding]
-public class UserApiSteps
-{
-    private HttpClient _httpClient;
-    private HttpResponseMessage _lastResponse;
-
-    [Given(@"I have the API base URL from configuration")]
-    public void GivenIHaveTheAPIBaseURL() { /* ... */ }
-
-    [When(@"I execute (GET|POST|PUT|DELETE|PATCH) request to ""([^""]*)""")]
-    public async Task WhenIExecuteRequest(string method, string url) { /* ... */ }
-
-    [Then(@"the response status code should be (\d+)")]
-    public void ThenStatusCodeShouldBe(int expectedStatus) { /* ... */ }
-}
-```
-
-### Running Generated SpecFlow Tests
+### C# NUnit
 
 ```bash
 # Create project
-dotnet new classlib -n UserApiTests
-cd UserApiTests
+dotnet new nunit -n MyTests
 
 # Add packages
-dotnet add package SpecFlow --version 3.9.0
-dotnet add package SpecFlow.NUnit --version 3.9.0
+dotnet add package NUnit
+dotnet add package Newtonsoft.Json
 
-# Create folder structure
-mkdir Features
-mkdir StepDefinitions
+# Run tests
+dotnet test
+```
 
-# Copy generated files
+### C# SpecFlow
+
+```bash
+# Create project
+dotnet new classlib -n MyTests
+
+# Add packages
+dotnet add package SpecFlow
+dotnet add package SpecFlow.NUnit
+
+# Organize files
+mkdir Features StepDefinitions
 mv *.feature Features/
 mv *Steps.cs StepDefinitions/
 
 # Run tests
 dotnet test
-
-# Generate living documentation
-livingdoc test-assembly UserApiTests.dll -t TestExecution.json
 ```
 
-## Available MCP Tools
+---
 
-The server exposes the following tools for AI agents:
+## 🔧 Available MCP Tools
 
-### 1. `get_flowsphere_schema`
-Returns complete FlowSphere configuration schema documentation including:
-- All properties and their types
-- Required vs optional fields
-- Default values and examples
-- Edge cases and validation rules
+The server exposes **11 MCP tools** for AI agents:
 
-### 2. `get_flowsphere_features`
-Returns detailed documentation of all FlowSphere features:
-- Variable substitution (4 types)
-- Condition evaluation (8 operators)
-- HTTP execution
-- Response validation
-- Implementation notes for each feature
+### Schema & Documentation Tools
 
-### 3. `get_feature_checklist`
-Returns a checklist of all 18 features that must be implemented in generated code.
+#### 1. `get_flowsphere_schema`
+Get complete FlowSphere configuration schema documentation.
 
-### 4. `generate_python_pytest`
-Generates production-ready Python pytest code from a FlowSphere config.
+**Returns:** Comprehensive schema with all properties, types, defaults, examples
 
-**Input:**
+#### 2. `get_flowsphere_features`
+Get detailed documentation of all 18 FlowSphere features.
+
+**Returns:** Feature descriptions, implementation notes, examples
+
+#### 3. `get_feature_checklist`
+Get checklist of all features that must be implemented in generated code.
+
+**Returns:** 18-item feature checklist
+
+### Python Generators
+
+#### 4. `generate_python_pytest`
+Generate production-ready Python pytest code.
+
+**Parameters:**
 - `config` (required): FlowSphere configuration object
 - `test_class_name` (optional): Custom test class name
+- `generate_report` (optional): Generate comprehensive generation report
+- `save_report_to` (optional): File path to save report
 
-**Output:**
+**Returns:**
 - `status`: "success" or "error"
 - `code`: Generated Python pytest code
-- `language`: "Python"
-- `framework`: "pytest"
-- `dependencies`: List of required pip packages
-- `usage_instructions`: How to run the generated tests
+- `config_json`: Separate config file content
+- `config_filename`: "config.json"
+- `dependencies`: List of pip packages
+- `usage_instructions`: How to run tests
+- `generation_report`: Optional detailed report (if generate_report=true)
 
-### 5. `generate_python_behave` ✨ NEW
-Generates production-ready Python behave/BDD tests from a FlowSphere config.
+#### 5. `generate_python_behave`
+Generate Python behave/BDD tests (Gherkin + step definitions).
 
-**Input:**
+**Parameters:**
 - `config` (required): FlowSphere configuration object
 - `feature_name` (optional): Custom feature file name
+- `generate_report` (optional): Generate comprehensive generation report
+- `save_report_to` (optional): File path to save report
 
-**Output:**
-- `status`: "success" or "error"
-- `code`: Combined output with Gherkin feature file and step definitions
-- `language`: "Python"
-- `framework`: "behave"
-- `dependencies`: List of required pip packages (behave, requests, jsonpath-ng)
-- `note`: Instructions on separating the two files
-
-**Features:**
-- Human-readable Gherkin syntax for stakeholders
-- Complete step definitions with all FlowSphere features
-- Reusable steps across multiple feature files
-- BDD-style test organization
-- Living documentation
-
-### 6. `generate_javascript_jest`
-Generates production-ready JavaScript Jest tests from a FlowSphere config.
-
-**Input:**
-- `config` (required): FlowSphere configuration object
-- `test_suite_name` (optional): Custom test suite name
-
-**Output:**
-- `status`: "success" or "error"
-- `code`: Generated JavaScript Jest test code
-- `package_json`: Complete package.json with all dependencies
-- `language`: "JavaScript"
-- `framework`: "Jest"
-- `dependencies`: List of required npm packages (jest, axios, jsonpath)
-- `usage_instructions`: How to run the generated tests
-
-**Features:**
-- Modern ES6+ syntax with async/await
-- Complete APISequence class implementation
-- Full support for all 18 FlowSphere features
-- Ready-to-run test suite
-- Comprehensive error handling
-
-### 7. `generate_javascript_mocha`
-Generates production-ready JavaScript Mocha tests from a FlowSphere config.
-
-**Input:**
-- `config` (required): FlowSphere configuration object
-- `test_class_name` (optional): Custom test class name
-
-**Output:**
-- `status`: "success" or "error"
-- `code`: Generated JavaScript Mocha test code
-- `package_json`: Complete package.json with all dependencies
-- `language`: "JavaScript"
-- `framework`: "Mocha"
-- `dependencies`: List of required npm packages (mocha, chai, axios, jsonpath-plus, uuid)
-- `usage_instructions`: How to run the generated tests
-
-**Features:**
-- Mocha describe/it syntax
-- Chai expect assertions
-- beforeEach hooks for setup
-- Configurable timeouts
-- Full support for all 18 FlowSphere features
-
-### 8. `generate_javascript_cucumber`
-Generates production-ready JavaScript Cucumber/BDD tests from a FlowSphere config.
-
-**Input:**
-- `config` (required): FlowSphere configuration object
-- `feature_name` (optional): Custom feature file name
-
-**Output:**
-- `status`: "success" or "error"
-- `feature`: Generated Gherkin feature file content
-- `steps`: Generated step definitions file content
-- `language`: "JavaScript"
-- `framework`: "Cucumber"
-- `dependencies`: List of required npm packages (@cucumber/cucumber, axios, jsonpath-plus, uuid, chai)
-- `package_json`: Complete package.json with all dependencies
+**Returns:**
+- `code`: Combined Gherkin feature + step definitions
+- `config_json`: Separate config file content
+- `dependencies`: List of pip packages (behave, requests, jsonpath-ng)
 - `note`: Instructions on file organization
+- `generation_report`: Optional detailed report
 
-**Features:**
-- Gherkin feature files with human-readable scenarios
-- Given/When/Then step definitions
-- APIWorld class for state management
-- Living documentation for stakeholders
-- Reusable steps across multiple features
-- Full support for all 18 FlowSphere features
+### JavaScript Generators
 
-### 9. `generate_csharp_xunit`
-Generates production-ready C# xUnit tests from a FlowSphere config.
+#### 6. `generate_javascript_jest`
+Generate JavaScript Jest tests.
 
-**Input:**
+**Parameters:**
+- `config` (required): FlowSphere configuration object
+- `test_class_name` (optional): Custom test class name
+- `generate_report` (optional): Generate comprehensive generation report
+- `save_report_to` (optional): File path to save report
+
+**Returns:**
+- `code`: Generated Jest test file
+- `config_json`: Separate config file content
+- `package_json`: Complete package.json
+- `dependencies`: List of npm packages
+- `usage_instructions`: How to run tests
+- `generation_report`: Optional detailed report
+
+#### 7. `generate_javascript_mocha`
+Generate JavaScript Mocha tests with Chai assertions.
+
+**Parameters:**
+- `config` (required): FlowSphere configuration object
+- `test_class_name` (optional): Custom test class name
+- `generate_report` (optional): Generate comprehensive generation report
+- `save_report_to` (optional): File path to save report
+
+**Returns:**
+- `code`: Generated Mocha test file
+- `config_json`: Separate config file content
+- `package_json`: Complete package.json
+- `dependencies`: List of npm packages (mocha, chai, axios, jsonpath-plus)
+- `generation_report`: Optional detailed report
+
+#### 8. `generate_javascript_cucumber`
+Generate JavaScript Cucumber/BDD tests (Gherkin + step definitions).
+
+**Parameters:**
+- `config` (required): FlowSphere configuration object
+- `feature_name` (optional): Custom feature file name
+- `generate_report` (optional): Generate comprehensive generation report
+- `save_report_to` (optional): File path to save report
+
+**Returns:**
+- `feature`: Gherkin feature file content
+- `steps`: Step definitions file content
+- `config_json`: Separate config file content
+- `package_json`: Complete package.json
+- `dependencies`: List of npm packages (@cucumber/cucumber, axios, chai)
+- `note`: File organization instructions
+- `generation_report`: Optional detailed report
+
+### C# Generators
+
+#### 9. `generate_csharp_xunit`
+Generate C# xUnit tests.
+
+**Parameters:**
 - `config` (required): FlowSphere configuration object
 - `test_class_name` (optional): Custom test class name
 - `namespace` (optional): Custom namespace (default: FlowSphere.Tests)
+- `generate_report` (optional): Generate comprehensive generation report
+- `save_report_to` (optional): File path to save report
 
-**Output:**
-- `status`: "success" or "error"
-- `code`: Generated C# xUnit test file content
-- `language`: "C#"
-- `framework`: "xUnit"
-- `dependencies`: List of required NuGet packages (xunit, Newtonsoft.Json, etc.)
-- `csproj`: Complete .csproj file with all package references
-- `usage_instructions`: Markdown guide for running tests
+**Returns:**
+- `code`: Generated xUnit test file
+- `config_json`: Separate config file content
+- `csproj`: Complete .csproj file with NuGet packages
+- `dependencies`: List of NuGet packages (xunit, Newtonsoft.Json)
+- `usage_instructions`: How to run tests
+- `generation_report`: Optional detailed report
 
-**Features:**
-- Modern C# with async/await
-- HttpClient for HTTP requests
-- [Fact] and [Theory] attributes
-- xUnit Assert methods
-- Complete .csproj template
-- Full support for all 18 FlowSphere features
+#### 10. `generate_csharp_nunit`
+Generate C# NUnit tests with constraint model assertions.
 
-### 10. `generate_csharp_nunit`
-Generates production-ready C# NUnit tests from a FlowSphere config.
-
-**Input:**
+**Parameters:**
 - `config` (required): FlowSphere configuration object
 - `test_class_name` (optional): Custom test class name
 - `namespace` (optional): Custom namespace (default: FlowSphere.Tests)
+- `generate_report` (optional): Generate comprehensive generation report
+- `save_report_to` (optional): File path to save report
 
-**Output:**
-- `status`: "success" or "error"
-- `code`: Generated C# NUnit test file content
-- `language`: "C#"
-- `framework`: "NUnit"
-- `dependencies`: List of required NuGet packages (NUnit, Newtonsoft.Json, etc.)
-- `csproj`: Complete .csproj file with all package references
-- `usage_instructions`: Markdown guide for running tests
+**Returns:**
+- `code`: Generated NUnit test file
+- `config_json`: Separate config file content
+- `csproj`: Complete .csproj file with NuGet packages
+- `dependencies`: List of NuGet packages (NUnit, Newtonsoft.Json)
+- `usage_instructions`: How to run tests
+- `generation_report`: Optional detailed report
 
-**Features:**
-- Modern C# with async/await
-- HttpClient for HTTP requests
-- [TestFixture] and [Test] attributes
-- [SetUp] lifecycle methods
-- Constraint model assertions (Assert.That, Is.EqualTo, Does.Contain)
-- Complete .csproj template
-- Full support for all 18 FlowSphere features
+#### 11. `generate_csharp_specflow`
+Generate C# SpecFlow/BDD tests (Gherkin + step definitions).
 
-### 11. `generate_csharp_specflow`
-Generates production-ready C# SpecFlow/BDD tests from a FlowSphere config.
-
-**Input:**
+**Parameters:**
 - `config` (required): FlowSphere configuration object
 - `feature_name` (optional): Custom feature file name
 - `step_class_name` (optional): Custom step definitions class name
 - `namespace` (optional): Custom namespace (default: FlowSphere.Tests)
+- `generate_report` (optional): Generate comprehensive generation report
+- `save_report_to` (optional): File path to save report
 
-**Output:**
-- `status`: "success" or "error"
-- `feature`: Generated Gherkin feature file content
-- `steps`: Generated C# step definitions file content
-- `language`: "C#"
-- `framework`: "SpecFlow"
-- `dependencies`: List of required NuGet packages (SpecFlow, NUnit, etc.)
-- `csproj`: Complete .csproj file with all package references
-- `note`: Instructions on file organization
+**Returns:**
+- `feature`: Gherkin feature file content
+- `steps`: C# step definitions file content
+- `config_json`: Separate config file content
+- `csproj`: Complete .csproj file with NuGet packages
+- `dependencies`: List of NuGet packages (SpecFlow, NUnit)
+- `note`: File organization instructions
+- `generation_report`: Optional detailed report
 
-**Features:**
-- Gherkin feature files with human-readable scenarios
-- C# step definitions with [Binding], [Given], [When], [Then] attributes
-- Async/await support in step definitions
-- Living documentation support
-- SpecFlow + NUnit integration
-- Complete .csproj template
-- Full support for all 18 FlowSphere features
+### 📊 Generation Reports
 
-## Complete Feature Coverage
+All code generation tools support optional comprehensive reports with:
+- **Configuration Analysis** - Size, node count, features detected
+- **Token Usage Analysis** - Input/output tokens, real-time tracking
+- **Cost Estimation** - GPT-4 pricing reference, savings calculations
+- **Optimization Recommendations** - Context-aware tips
+- **Scaling Projections** - Daily/weekly/monthly cost estimates
 
-The generated code handles ALL FlowSphere features:
+**Example Usage:**
+```python
+result = mcp_server.call_tool("generate_python_pytest", {
+    "config": your_config,
+    "generate_report": True,
+    "save_report_to": "reports/generation_report.md"
+})
 
-✅ HTTP Execution (all methods, headers, body, timeout)
-✅ Variable Substitution ({{ .vars }}, {{ .responses }}, {{ .input }}, {{ $guid }}, {{ $timestamp }})
-✅ Condition Evaluation (all operators, AND logic, variable substitution in conditions)
-✅ Validation (HTTP status + JSONPath with all operators)
-✅ User Interaction (userPrompts, launchBrowser)
-✅ State Management (response storage, defaults merging)
-✅ Skip Flags (skipDefaultHeaders, skipDefaultValidations)
-✅ Debug Mode (enableDebug for detailed logging)
+# Access the report
+print(result['generation_report'])  # Full markdown report
+print(result['report_path'])  # File path if saved
+```
 
-## License
+---
 
-MIT
+## ✅ Complete Feature Coverage
+
+All generators support **ALL 18 FlowSphere features**:
+
+### HTTP Execution
+- ✅ GET, POST, PUT, DELETE, PATCH requests
+- ✅ Custom headers (per-request and defaults)
+- ✅ Request body (JSON)
+- ✅ Timeout configuration
+
+### Variable Substitution (4 Types)
+- ✅ `{{ .vars.key }}` - Global variables
+- ✅ `{{ .responses.nodeId.field }}` - Response references
+- ✅ `{{ .input.variableName }}` - User input
+- ✅ `{{ $guid }}`, `{{ $timestamp }}` - Dynamic placeholders
+
+### Condition Evaluation (8 Operators)
+- ✅ `equals`, `notEquals`
+- ✅ `contains`, `notContains`
+- ✅ `greaterThan`, `lessThan`
+- ✅ `greaterThanOrEqual`, `lessThanOrEqual`
+- ✅ AND logic for multiple conditions
+- ✅ Variable substitution in conditions
+
+### Response Validation
+- ✅ HTTP status code validation
+- ✅ JSONPath field validation with all operators
+- ✅ Skip default validations flag
+
+### Advanced Features
+- ✅ Field extraction (JSONPath) with variable storage
+- ✅ User prompts (`promptMessage`)
+- ✅ Browser launch (`launchBrowser`)
+- ✅ Skip default headers flag
+- ✅ Debug mode (`enableDebug`)
+
+---
+
+## 📂 Project Structure
+
+```
+flowsphere-mcp-server/
+├── src/flowsphere_mcp/
+│   ├── server.py                    # MCP server (11 tools)
+│   ├── schema/
+│   │   ├── config_schema.py         # FlowSphere schema docs
+│   │   └── features.py              # 18 features documentation
+│   ├── templates/
+│   │   ├── python/                  # pytest, behave templates
+│   │   ├── javascript/              # Jest, Mocha, Cucumber templates
+│   │   └── csharp/                  # xUnit, NUnit, SpecFlow templates
+│   ├── generators/
+│   │   ├── base_generator.py        # Base generator class
+│   │   ├── python_generator.py      # Python pytest generator
+│   │   ├── behave_generator.py      # Python behave generator
+│   │   ├── javascript_generator.py  # JS Jest/Mocha/Cucumber generators
+│   │   └── csharp_generator.py      # C# xUnit/NUnit/SpecFlow generators
+│   └── utils/
+│       └── report_generator.py      # Generation report builder
+├── tests/
+│   ├── fixtures/                    # 5 sample FlowSphere configs
+│   ├── test_*_generator.py          # Generator tests (153 tests total)
+│   └── generated_code/              # Example outputs
+├── requirements.txt
+├── ROADMAP.md
+└── README.md
+```
+
+---
+
+## 🗺️ Development Phases
+
+- ✅ **Phase 1** - Schema provider
+- ✅ **Phase 2** - Python pytest generator (31 tests)
+- ✅ **Phase 3** - Python behave/BDD generator (34 tests)
+- ✅ **Phase 4** - JavaScript generators (Jest, Mocha, Cucumber) (46 tests)
+- ✅ **Phase 5** - C# generators (xUnit, NUnit, SpecFlow) (39 tests)
+- ✅ **Phase 7.1** - Token optimization (config file loading) - 3,000 tokens saved per generation
+- 🔄 **Phase 7** - Token efficiency & performance optimization (in progress)
+- 📋 **Phase 6** - Publishing & distribution (PyPI, Smithery)
+
+**Current Status:** 153 tests passing, 100% coverage, 8 production-ready generators
+
+---
+
+## ❓ Troubleshooting
+
+### MCP Server Won't Connect
+
+**Symptom:** Server shows "Failed to connect" in `/mcp` output
+
+**Solutions:**
+1. Verify Python packages are installed: `pip install -r requirements.txt`
+2. Check server path in config: `claude mcp get flowsphere-mcp`
+3. Ensure path uses backslashes on Windows: `C:\path\to\...`
+4. Re-add the server: `claude mcp remove flowsphere-mcp -s local` then `claude mcp add...`
+5. Restart Claude Code: Exit with `/exit`, then `claude`
+
+### Generated Python Tests Fail
+
+**Solutions:**
+```bash
+# Install dependencies
+pip install pytest requests jsonpath-ng behave
+
+# Verify Python version
+python --version  # Should be 3.10+
+
+# Check config file is in correct location
+ls config.json  # Should be in same directory as test file
+```
+
+### Generated JavaScript Tests Fail
+
+**Solutions:**
+```bash
+# Install dependencies from generated package.json
+npm install
+
+# Verify Node.js version
+node --version  # Should be 16+
+
+# Check config file location
+ls config.json  # Should be in same directory as test file
+```
+
+### Generated C# Tests Fail
+
+**Solutions:**
+```bash
+# Restore packages
+dotnet restore
+
+# Verify .NET SDK version
+dotnet --version  # Should be 6.0+
+
+# Check config file location
+dir config.json  # Should be in project root or Configuration/ folder
+```
+
+### Import Errors in Generated Code
+
+**Solution:** All generated code expects `config.json` to be loaded from file. Make sure to:
+1. Save the `config_json` from the MCP response to a file named `config.json`
+2. Place it in the same directory as your tests (or in a `configuration/` subdirectory)
+3. See the `note` field in the MCP response for specific placement instructions
+
+---
+
+## 🆘 Support & Next Steps
+
+### Quick Links
+- **FlowSphere Documentation:** https://github.com/ymoud/flowsphere
+- **Sample Configurations:** [tests/fixtures/](tests/fixtures/)
+- **Roadmap:** [ROADMAP.md](ROADMAP.md)
+
+### Next Steps
+
+1. **Try Quick Start** - Get running in 5 minutes with Claude Code CLI
+2. **Generate Your First Test** - Use one of the sample configs in `tests/fixtures/`
+3. **Run the Generated Code** - See it work against real APIs
+4. **Customize Configs** - Experiment with different FlowSphere features
+5. **Integrate with CI/CD** - Add generated tests to your pipeline
+
+### Running Unit Tests
+
+Verify everything works:
+```bash
+# Run all tests (153 tests)
+pytest tests/ -v
+
+# Run specific generator tests
+pytest tests/test_python_generator.py -v       # 31 tests
+pytest tests/test_behave_generator.py -v      # 34 tests
+pytest tests/test_javascript_generator.py -v  # 30 tests
+pytest tests/test_mocha_generator.py -v       # 8 tests
+pytest tests/test_cucumber_generator.py -v    # 8 tests
+pytest tests/test_xunit_generator.py -v       # 12 tests
+pytest tests/test_nunit_generator.py -v       # 14 tests
+pytest tests/test_specflow_generator.py -v    # 13 tests
+```
+
+---
+
+## 📄 License
+
+MIT License - See [LICENSE](LICENSE) for details
+
+---
+
+**Built with ❤️ for the FlowSphere community**
