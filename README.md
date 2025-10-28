@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/ymoud/flowsphere-mcp/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-98%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-114%20passing-brightgreen.svg)](tests/)
 [![Code Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](tests/)
 [![MCP](https://img.shields.io/badge/MCP-enabled-purple.svg)](https://modelcontextprotocol.io)
 
@@ -14,8 +14,8 @@ This MCP server provides deep schema knowledge and code generation templates to 
 ## What It Does
 
 Transforms FlowSphere config files (JSON) into standalone, production-ready test code in:
-- **Python** - ✅ pytest (complete), ✅ behave/BDD (complete)
-- **JavaScript** - ✅ Jest (complete), Mocha, cucumber-js (coming soon)
+- **Python** - ✅ pytest, ✅ behave/BDD
+- **JavaScript** - ✅ Jest, ✅ Mocha, ✅ Cucumber/BDD
 - **C#** - xUnit, NUnit, SpecFlow (coming soon)
 
 ## Architecture
@@ -110,7 +110,7 @@ pytest test_api.py -v -s
 ```
 flowsphere-mcp-server/
 ├── src/flowsphere_mcp/
-│   ├── server.py                 # MCP server entry point (6 tools)
+│   ├── server.py                 # MCP server entry point (8 tools)
 │   ├── schema/
 │   │   ├── config_schema.py      # FlowSphere config schema documentation
 │   │   └── features.py           # Feature descriptions (18 features)
@@ -121,19 +121,24 @@ flowsphere-mcp-server/
 │   │   │   ├── gherkin_template.jinja2       # Gherkin feature file template
 │   │   │   └── step_definitions_template.jinja2  # behave step definitions
 │   │   └── javascript/
-│   │       └── jest_template.jinja2          # Jest test template
+│   │       ├── jest_template.jinja2          # Jest test template
+│   │       ├── mocha_template.jinja2         # Mocha test template
+│   │       ├── cucumber_feature_template.jinja2  # Cucumber feature file
+│   │       └── cucumber_steps_template.jinja2    # Cucumber step definitions
 │   └── generators/
 │       ├── base_generator.py      # Base generator class
 │       ├── python_generator.py    # Python pytest generator
 │       ├── behave_generator.py    # Python behave/BDD generator
-│       └── javascript_generator.py # JavaScript Jest generator
+│       └── javascript_generator.py # JavaScript Jest/Mocha/Cucumber generators
 ├── tests/
 │   ├── fixtures/                  # 5 test configs
 │   ├── generated_code/            # Example outputs
 │   ├── test_schema.py             # Schema tests (3 tests)
 │   ├── test_python_generator.py   # pytest generator tests (31 tests)
 │   ├── test_behave_generator.py   # behave generator tests (34 tests)
-│   └── test_javascript_generator.py # Jest generator tests (30 tests)
+│   ├── test_javascript_generator.py # Jest generator tests (30 tests)
+│   ├── test_mocha_generator.py    # Mocha generator tests (8 tests)
+│   └── test_cucumber_generator.py # Cucumber generator tests (8 tests)
 ├── requirements.txt
 └── README.md
 ```
@@ -143,7 +148,7 @@ flowsphere-mcp-server/
 - **Phase 1** ✅ - Schema provider (FlowSphere config documentation)
 - **Phase 2** ✅ - Python pytest code generator (production-ready)
 - **Phase 3** ✅ - Python behave code generator (BDD/Cucumber)
-- **Phase 4** ✅ - JavaScript Jest code generator (production-ready)
+- **Phase 4** ✅ - JavaScript code generators (Jest, Mocha, Cucumber) - **COMPLETE**
 - **Phase 5** 📋 - C# code generation (xUnit, NUnit, SpecFlow)
 - **Phase 6** 📋 - Publishing & Distribution (PyPI, Smithery)
 
@@ -253,18 +258,23 @@ behave -v
 behave -n "Register a new user"
 ```
 
-## Phase 4 Complete: JavaScript Jest Code Generation
+## Phase 4 Complete: JavaScript Code Generation (Jest, Mocha, Cucumber)
 
-**Status:** ✅ Complete - All 30 tests passing (98 total tests)
+**Status:** ✅ Complete - All 46 tests passing (114 total tests)
 
-Phase 4 delivers production-ready JavaScript Jest code generation with:
+Phase 4 delivers production-ready JavaScript code generation with three frameworks:
+
+### Framework Overview
+- **Jest** (30 tests) - Modern testing with expect assertions
+- **Mocha** (8 tests) - Traditional testing with Chai assertions
+- **Cucumber** (8 tests) - BDD/Gherkin for living documentation
+
+### Common Features (All Frameworks)
 - ✅ Modern ES6+ syntax with async/await
-- ✅ Complete APISequence class with all FlowSphere features
-- ✅ Jest test framework integration
+- ✅ Complete APISequence/APIWorld class with all FlowSphere features
 - ✅ axios for HTTP requests
 - ✅ JSONPath support for response validation
 - ✅ Complete package.json generation
-- ✅ 30 comprehensive tests (100% passing)
 - ✅ Full support for all 18 FlowSphere features
 
 ### Example: JavaScript Jest Generation
@@ -343,6 +353,76 @@ npm test -- --coverage
 
 # Run specific test
 npm test -- -t "Get all products"
+```
+
+### Mocha + Chai Generation
+
+**Differences from Jest:**
+- Uses `describe` and `it` (instead of `test`)
+- Uses Chai `expect` assertions
+- Includes `beforeEach` hooks
+- Configurable timeout with `this.timeout()`
+
+**Example Usage:**
+```javascript
+result = mcp_server.call_tool("generate_javascript_mocha", {"config": flowsphere_config})
+```
+
+**Generated Output:**
+- Complete Mocha test file with Chai assertions
+- APISequence class with all features
+- Package.json with mocha, chai, axios, jsonpath-plus
+
+**Running Mocha Tests:**
+```bash
+npm install --save-dev mocha chai axios jsonpath-plus uuid
+npm test  # or: npx mocha test_file.test.js
+```
+
+### Cucumber/BDD Generation
+
+**BDD Features:**
+- Gherkin feature files with human-readable scenarios
+- Step definitions with Given/When/Then
+- APIWorld class for state management
+- Living documentation for stakeholders
+- Reusable steps across features
+
+**Example Usage:**
+```javascript
+result = mcp_server.call_tool("generate_javascript_cucumber", {"config": flowsphere_config})
+// Returns: result.feature and result.steps
+```
+
+**Generated Output:**
+
+1. **Feature File** (`api_test.feature`):
+```gherkin
+Feature: Product API Tests
+
+  Scenario: Get all products
+    When I execute GET request to "/products"
+    Then the response status code should be 200
+    And the response field "$[0].name" should be "Product 1"
+```
+
+2. **Step Definitions** (`api_test_steps.js`):
+- APIWorld class with context management
+- Given/When/Then step implementations
+- Full variable substitution support
+- Response validation with Chai
+
+**Running Cucumber Tests:**
+```bash
+npm install --save-dev @cucumber/cucumber axios jsonpath-plus uuid chai
+
+# Organize files
+mkdir -p features/step_definitions
+mv *.feature features/
+mv *_steps.js features/step_definitions/
+
+# Run tests
+npx cucumber-js
 ```
 
 ## Available MCP Tools
@@ -426,6 +506,54 @@ Generates production-ready JavaScript Jest tests from a FlowSphere config.
 - Full support for all 18 FlowSphere features
 - Ready-to-run test suite
 - Comprehensive error handling
+
+### 7. `generate_javascript_mocha`
+Generates production-ready JavaScript Mocha tests from a FlowSphere config.
+
+**Input:**
+- `config` (required): FlowSphere configuration object
+- `test_class_name` (optional): Custom test class name
+
+**Output:**
+- `status`: "success" or "error"
+- `code`: Generated JavaScript Mocha test code
+- `package_json`: Complete package.json with all dependencies
+- `language`: "JavaScript"
+- `framework`: "Mocha"
+- `dependencies`: List of required npm packages (mocha, chai, axios, jsonpath-plus, uuid)
+- `usage_instructions`: How to run the generated tests
+
+**Features:**
+- Mocha describe/it syntax
+- Chai expect assertions
+- beforeEach hooks for setup
+- Configurable timeouts
+- Full support for all 18 FlowSphere features
+
+### 8. `generate_javascript_cucumber`
+Generates production-ready JavaScript Cucumber/BDD tests from a FlowSphere config.
+
+**Input:**
+- `config` (required): FlowSphere configuration object
+- `feature_name` (optional): Custom feature file name
+
+**Output:**
+- `status`: "success" or "error"
+- `feature`: Generated Gherkin feature file content
+- `steps`: Generated step definitions file content
+- `language`: "JavaScript"
+- `framework`: "Cucumber"
+- `dependencies`: List of required npm packages (@cucumber/cucumber, axios, jsonpath-plus, uuid, chai)
+- `package_json`: Complete package.json with all dependencies
+- `note`: Instructions on file organization
+
+**Features:**
+- Gherkin feature files with human-readable scenarios
+- Given/When/Then step definitions
+- APIWorld class for state management
+- Living documentation for stakeholders
+- Reusable steps across multiple features
+- Full support for all 18 FlowSphere features
 
 ## Complete Feature Coverage
 
