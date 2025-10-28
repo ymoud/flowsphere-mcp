@@ -9,6 +9,8 @@
 const axios = require('axios');
 const { JSONPath } = require('jsonpath-plus');
 const { v4: uuidv4 } = require('uuid');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * Base class for executing FlowSphere HTTP API sequences.
@@ -335,6 +337,34 @@ class APISequence {
             }
         }
     }
+}
+
+/**
+ * Load FlowSphere configuration from JSON file.
+ * @param {string} configFileName - Name of the config file (e.g., "config.json")
+ * @returns {Object} Parsed configuration object
+ * @throws {Error} If config file is not found
+ */
+function loadConfiguration(configFileName = 'config.json') {
+    // Try multiple possible locations for the config file
+    const possiblePaths = [
+        configFileName,  // Current directory
+        path.join(__dirname, configFileName),  // Same directory as test file
+        path.join(__dirname, 'configuration', configFileName),  // configuration subfolder
+        path.join(process.cwd(), configFileName),  // Working directory
+        path.join(process.cwd(), 'configuration', configFileName),  // Working dir configuration subfolder
+    ];
+
+    for (const filePath of possiblePaths) {
+        if (fs.existsSync(filePath)) {
+            const configJson = fs.readFileSync(filePath, 'utf8');
+            return JSON.parse(configJson);
+        }
+    }
+
+    throw new Error(
+        `Configuration file '${configFileName}' not found. Searched in: ${possiblePaths.join(', ')}`
+    );
 }
 
 describe('{{ test_class_name }}', () => {

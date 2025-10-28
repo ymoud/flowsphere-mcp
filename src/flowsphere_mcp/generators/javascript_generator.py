@@ -74,7 +74,7 @@ class JavaScriptJestGenerator(BaseGenerator):
         # Prepare template context
         context = {
             'config': config,
-            'config_json': json.dumps(config, indent=4),
+            'config_json': 'loadConfiguration("config.json")',
             'test_class_name': test_class_name,
             'generation_timestamp': datetime.now().isoformat(),
             'include_comments': options.get('include_comments', True)
@@ -385,7 +385,7 @@ class JavaScriptMochaGenerator(BaseGenerator):
         # Prepare template context
         context = {
             'config': config,
-            'config_json': json.dumps(config, indent=4),
+            'config_json': 'loadConfiguration("config.json")',
             'test_class_name': test_class_name,
             'nodes': config.get('nodes', []),
             'generation_timestamp': datetime.now().isoformat(),
@@ -678,7 +678,7 @@ class JavaScriptCucumberGenerator(BaseGenerator):
 
         context = {
             'config': config,
-            'config_json': json.dumps(config, indent=4),
+            'config_json': 'loadConfiguration("config.json")',
             'feature_name': feature_name,
             'generation_timestamp': datetime.now().isoformat(),
             'include_comments': options.get('include_comments', True)

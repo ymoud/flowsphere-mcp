@@ -399,9 +399,12 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 "language": generator.get_language_name(),
                 "framework": generator.get_framework_name(),
                 "code": generated_code,
+                "config_json": json.dumps(config, indent=2),
+                "config_filename": "config.json",
                 "dependencies": generator.get_required_dependencies(),
                 "usage_instructions": generator.get_usage_instructions(),
-                "package_json": generator.get_package_json_template()
+                "package_json": generator.get_package_json_template(),
+                "note": "Save the config_json to a file named 'config.json' in the same directory as your tests or in a configuration/ subdirectory"
             }
 
             return [
@@ -454,9 +457,12 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 "language": generator.get_language_name(),
                 "framework": generator.get_framework_name(),
                 "code": generated_code,
+                "config_json": json.dumps(config, indent=2),
+                "config_filename": "config.json",
                 "dependencies": generator.get_required_dependencies(),
                 "usage_instructions": generator.get_usage_instructions(),
-                "package_json": generator.get_package_json_template()
+                "package_json": generator.get_package_json_template(),
+                "note": "Save the config_json to a file named 'config.json' in the same directory as your tests or in a configuration/ subdirectory"
             }
 
             return [
@@ -510,9 +516,11 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 "framework": generator.get_framework_name(),
                 "feature": generated["feature"],
                 "steps": generated["steps"],
+                "config_json": json.dumps(config, indent=2),
+                "config_filename": "config.json",
                 "dependencies": generator.get_required_dependencies(),
                 "package_json": generator.get_package_json_template(),
-                "note": "Save feature file as *.feature and steps file as *_steps.js in features/step_definitions/ directory"
+                "note": "Save feature file as *.feature and steps file as *_steps.js in features/step_definitions/ directory. Save config_json to 'config.json' in the features/ parent directory or configuration/ subdirectory"
             }
 
             return [
