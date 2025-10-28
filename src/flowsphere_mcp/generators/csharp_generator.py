@@ -610,3 +610,362 @@ def generate_csharp_nunit(config_str: str, **options) -> str:
     generator = CSharpNUnitGenerator()
     config = generator.load_config(config_str)
     return generator.generate(config, **options)
+
+
+class CSharpSpecFlowGenerator(BaseGenerator):
+    """
+    Generator for C# SpecFlow/BDD test code.
+
+    Produces Gherkin feature files and C# step definitions for SpecFlow.
+    """
+
+    def __init__(self):
+        """Initialize the C# SpecFlow generator."""
+        super().__init__()
+
+    def get_language_name(self) -> str:
+        """Get language name."""
+        return "C#"
+
+    def get_framework_name(self) -> str:
+        """Get framework name."""
+        return "SpecFlow"
+
+    def get_required_dependencies(self) -> list[str]:
+        """
+        Get list of required NuGet packages.
+
+        Returns:
+            List of NuGet package names
+        """
+        return [
+            "SpecFlow@^3.9.0",
+            "SpecFlow.NUnit@^3.9.0",
+            "NUnit@^3.14.0",
+            "NUnit3TestAdapter@^4.5.0",
+            "Newtonsoft.Json@^13.0.3",
+            "Microsoft.NET.Test.Sdk@^17.8.0"
+        ]
+
+    def generate(self, config: Dict[str, Any], **options) -> Dict[str, str]:
+        """
+        Generate C# SpecFlow code from FlowSphere configuration.
+
+        Args:
+            config: Validated FlowSphere configuration dictionary
+            **options: Additional options
+                - feature_name: Name for feature file (default: auto-generated)
+                - step_class_name: Name for step definitions class (default: auto-generated)
+                - namespace: Namespace for the test class (default: FlowSphere.Tests)
+
+        Returns:
+            Dictionary with 'feature' and 'steps' keys containing generated code
+        """
+        # Validate config first
+        is_valid, error_msg = self.validate_config(config)
+        if not is_valid:
+            raise ValueError(f"Invalid configuration: {error_msg}")
+
+        # Generate names
+        feature_name = options.get('feature_name')
+        if not feature_name:
+            config_name = config.get('name', 'APIFlow')
+            feature_name = self._sanitize_feature_name(config_name)
+
+        step_class_name = options.get('step_class_name')
+        if not step_class_name:
+            step_class_name = f"{feature_name}Steps"
+
+        # Prepare template context
+        context = {
+            'config': config,
+            'config_json': self._format_config_for_csharp(config),
+            'feature_name': feature_name,
+            'step_class_name': step_class_name,
+            'nodes': config.get('nodes', []),
+            'generation_timestamp': datetime.now().isoformat(),
+            'namespace': options.get('namespace', 'FlowSphere.Tests')
+        }
+
+        # Generate feature file
+        feature_template = self.load_template('csharp/specflow_feature_template.jinja2')
+        feature_code = self.render_template(feature_template, context)
+
+        # Generate step definitions
+        steps_template = self.load_template('csharp/specflow_steps_template.jinja2')
+        steps_code = self.render_template(steps_template, context)
+
+        # Format code
+        feature_code = self.format_gherkin(feature_code)
+        steps_code = self.format_code(steps_code)
+
+        return {
+            'feature': feature_code,
+            'steps': steps_code
+        }
+
+    def _sanitize_feature_name(self, name: str) -> str:
+        """
+        Convert a string to a valid feature file name.
+
+        Args:
+            name: Input string
+
+        Returns:
+            Valid feature name
+        """
+        # Remove/replace invalid characters
+        name = re.sub(r'[^a-zA-Z0-9_]', '_', name)
+
+        # Convert to PascalCase
+        parts = name.split('_')
+        pascal_case = ''.join(word.capitalize() for word in parts if word)
+
+        # Ensure it starts with a letter
+        if pascal_case and pascal_case[0].isdigit():
+            pascal_case = 'Feature_' + pascal_case
+
+        # Default name if empty
+        if not pascal_case:
+            pascal_case = 'APIFlow'
+
+        return pascal_case
+
+    def _format_config_for_csharp(self, config: Dict[str, Any]) -> str:
+        """
+        Format configuration for C# Dictionary initialization.
+
+        Args:
+            config: FlowSphere configuration
+
+        Returns:
+            C# Dictionary initialization code
+        """
+        json_str = json.dumps(config, indent=12)
+        return f'JsonSerializer.Deserialize<Dictionary<string, object>>(@"{json_str}")'
+
+    def format_code(self, code: str) -> str:
+        """
+        Format C# code (basic formatting).
+
+        Args:
+            code: Raw generated code
+
+        Returns:
+            Formatted code
+        """
+        # Remove excessive blank lines
+        code = re.sub(r'\n{4,}', '\n\n\n', code)
+
+        # Ensure file ends with single newline
+        code = code.rstrip() + '\n'
+
+        return code
+
+    def format_gherkin(self, code: str) -> str:
+        """
+        Format Gherkin feature file (basic formatting).
+
+        Args:
+            code: Raw generated Gherkin
+
+        Returns:
+            Formatted Gherkin
+        """
+        # Remove excessive blank lines
+        code = re.sub(r'\n{3,}', '\n\n', code)
+
+        # Ensure file ends with single newline
+        code = code.rstrip() + '\n'
+
+        return code
+
+    def validate_generated_code(self, code: Dict[str, str]) -> tuple[bool, Optional[str]]:
+        """
+        Validate that generated code is syntactically correct.
+
+        Args:
+            code: Dictionary with 'feature' and 'steps' keys
+
+        Returns:
+            Tuple of (is_valid, error_message)
+        """
+        feature = code.get('feature', '')
+        steps = code.get('steps', '')
+
+        # Validate feature file
+        feature_checks = [
+            ('Feature:' in feature, "Missing Feature declaration"),
+            ('Scenario:' in feature, "Missing Scenario declarations"),
+        ]
+
+        for is_valid, error_msg in feature_checks:
+            if not is_valid:
+                return False, f"Feature file: {error_msg}"
+
+        # Validate step definitions
+        steps_checks = [
+            ('[Binding]' in steps, "Missing [Binding] attribute"),
+            ('namespace ' in steps, "Missing namespace declaration"),
+            ('[Given' in steps or '[When' in steps or '[Then' in steps, "Missing step definition attributes"),
+            ('using TechTalk.SpecFlow;' in steps, "Missing SpecFlow using statement"),
+            ('HttpClient' in steps, "Missing HttpClient usage"),
+        ]
+
+        for is_valid, error_msg in steps_checks:
+            if not is_valid:
+                return False, f"Step definitions: {error_msg}"
+
+        return True, None
+
+    def get_usage_instructions(self) -> str:
+        """
+        Get instructions for running generated tests.
+
+        Returns:
+            Markdown-formatted usage instructions
+        """
+        return """
+## Running the Generated Tests
+
+### Create .NET Project
+
+```bash
+# Create new SpecFlow test project
+dotnet new classlib -n FlowSphereTests
+cd FlowSphereTests
+
+# Install dependencies
+dotnet add package SpecFlow --version 3.9.0
+dotnet add package SpecFlow.NUnit --version 3.9.0
+dotnet add package NUnit --version 3.14.0
+dotnet add package NUnit3TestAdapter --version 4.5.0
+dotnet add package Newtonsoft.Json --version 13.0.3
+dotnet add package Microsoft.NET.Test.Sdk --version 17.8.0
+
+# Install SpecFlow tools
+dotnet tool install --global SpecFlow.Plus.LivingDoc.CLI
+```
+
+### File Structure
+
+```
+FlowSphereTests/
+├── Features/
+│   └── APIFlow.feature          # Generated feature file
+├── StepDefinitions/
+│   └── APIFlowSteps.cs          # Generated step definitions
+└── FlowSphereTests.csproj
+```
+
+### Run Tests
+
+```bash
+# Run all tests
+dotnet test
+
+# Run with verbose output
+dotnet test --logger "console;verbosity=detailed"
+
+# Run specific feature
+dotnet test --filter "FullyQualifiedName~FeatureName"
+
+# Generate living documentation
+livingdoc test-assembly FlowSphereTests.dll -t TestExecution.json
+```
+
+### Project File (.csproj)
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SpecFlow" Version="3.9.0" />
+    <PackageReference Include="SpecFlow.NUnit" Version="3.9.0" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+  </ItemGroup>
+</Project>
+```
+
+## Features
+
+The generated SpecFlow tests include:
+
+- **Gherkin Feature Files**: Human-readable test scenarios
+- **Step Definitions**: C# implementations with async/await
+- **Variable Substitution**: Dynamic values, globals, response refs, user input
+- **Condition Evaluation**: Conditional test execution
+- **Response Validation**: Status codes and field validations with NUnit assertions
+- **Living Documentation**: Generate HTML docs from feature files
+
+## Customization
+
+You can extend the step definitions by adding new steps or modifying existing ones. The step definitions class provides all core functionality for FlowSphere features.
+
+## Debugging
+
+Set `enableDebug: true` in your FlowSphere config to see detailed debug output during test execution.
+
+## Requirements
+
+- .NET 8.0 or higher
+- SpecFlow 3.9.0 or higher
+- NUnit 3.14.0 or higher
+"""
+
+    def get_csproj_template(self, project_name: str = "FlowSphereTests") -> str:
+        """
+        Generate a complete .csproj file.
+
+        Args:
+            project_name: Name for the project
+
+        Returns:
+            Complete .csproj content
+        """
+        return f"""<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>{project_name}</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SpecFlow" Version="3.9.0" />
+    <PackageReference Include="SpecFlow.NUnit" Version="3.9.0" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+  </ItemGroup>
+</Project>
+"""
+
+
+def generate_csharp_specflow(config_str: str, **options) -> Dict[str, str]:
+    """
+    Generate C# SpecFlow code from FlowSphere config JSON string.
+
+    Args:
+        config_str: FlowSphere configuration as JSON string
+        **options: Additional generator options
+
+    Returns:
+        Dictionary with 'feature' and 'steps' keys
+
+    Raises:
+        ValueError: If config is invalid
+    """
+    generator = CSharpSpecFlowGenerator()
+    config = generator.load_config(config_str)
+    return generator.generate(config, **options)
