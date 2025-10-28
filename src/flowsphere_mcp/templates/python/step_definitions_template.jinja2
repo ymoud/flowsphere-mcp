@@ -12,6 +12,7 @@ import json
 import re
 import time
 import uuid
+import os
 from typing import Dict, Any, Optional
 from jsonpath_ng import parse as jsonpath_parse
 
@@ -138,11 +139,43 @@ class APIContext:
             return False
 
 
+def load_configuration(config_filename: str = "config.json") -> Dict[str, Any]:
+    """
+    Load FlowSphere configuration from JSON file.
+
+    Args:
+        config_filename: Name of the config file (e.g., "config.json")
+
+    Returns:
+        Parsed configuration dictionary
+
+    Raises:
+        FileNotFoundError: If config file is not found
+    """
+    # Try multiple possible locations for the config file
+    possible_paths = [
+        config_filename,  # Current directory
+        os.path.join(os.path.dirname(__file__), config_filename),  # Same directory as steps file
+        os.path.join(os.path.dirname(__file__), "..", "configuration", config_filename),  # ../configuration
+        os.path.join(os.getcwd(), config_filename),  # Working directory
+        os.path.join(os.getcwd(), "configuration", config_filename),  # Working dir configuration subfolder
+    ]
+
+    for path in possible_paths:
+        if os.path.exists(path):
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+
+    raise FileNotFoundError(
+        f"Configuration file '{config_filename}' not found. Searched in: {', '.join(possible_paths)}"
+    )
+
+
 def get_api_context(context):
     """Get or create API context for behave context."""
     if not hasattr(context, 'api_context'):
         # Load FlowSphere configuration
-        config = {{ config | tojson }}
+        config = load_configuration("config.json")
         context.api_context = APIContext(config)
     return context.api_context
 

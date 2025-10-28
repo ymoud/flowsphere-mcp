@@ -8,6 +8,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -449,6 +450,37 @@ namespace {{ namespace }}
         public {{ test_class_name }}()
         {
             _config = {{ config_json }};
+        }
+
+        /// <summary>
+        /// Load FlowSphere configuration from JSON file.
+        /// </summary>
+        /// <param name="configFileName">Name of the config file (e.g., "config.json")</param>
+        /// <returns>Parsed configuration dictionary</returns>
+        private Dictionary<string, object> LoadConfiguration(string configFileName)
+        {
+            // Try multiple possible locations for the config file
+            var possiblePaths = new[]
+            {
+                configFileName, // Current directory
+                Path.Combine(AppContext.BaseDirectory, configFileName), // Executable directory
+                Path.Combine(AppContext.BaseDirectory, "Configuration", configFileName), // Configuration subfolder
+                Path.Combine(Directory.GetCurrentDirectory(), configFileName), // Working directory
+                Path.Combine(Directory.GetCurrentDirectory(), "Configuration", configFileName) // Working dir Configuration subfolder
+            };
+
+            foreach (var path in possiblePaths)
+            {
+                if (File.Exists(path))
+                {
+                    var configJson = File.ReadAllText(path);
+                    return JsonSerializer.Deserialize<Dictionary<string, object>>(configJson);
+                }
+            }
+
+            throw new FileNotFoundException(
+                $"Configuration file '{configFileName}' not found. Searched in: {string.Join(", ", possiblePaths)}"
+            );
         }
 
 {% for node in nodes %}

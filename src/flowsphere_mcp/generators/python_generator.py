@@ -72,7 +72,7 @@ class PythonPytestGenerator(BaseGenerator):
         # Prepare template context
         context = {
             'config': config,
-            'config_json': json.dumps(config, indent=4),
+            'config_json': 'self.load_configuration("config.json")',
             'test_class_name': test_class_name,
             'generation_timestamp': datetime.now().isoformat(),
             'include_comments': options.get('include_comments', True)

@@ -116,21 +116,18 @@ class CSharpXUnitGenerator(BaseGenerator):
 
         return pascal_case
 
-    def _format_config_for_csharp(self, config: Dict[str, Any]) -> str:
+    def _format_config_for_csharp(self, config: Dict[str, Any], config_filename: str = "config.json") -> str:
         """
-        Format configuration for C# Dictionary initialization.
+        Generate C# code to load configuration from file.
 
         Args:
-            config: FlowSphere configuration
+            config: FlowSphere configuration (unused, kept for backward compatibility)
+            config_filename: Name of the config file to load
 
         Returns:
-            C# Dictionary initialization code
+            C# code to load config from file
         """
-        # For now, use JSON serialization as placeholder
-        # In production, this would generate proper C# dictionary syntax
-        json_str = json.dumps(config, indent=12)
-        # This is a simplified version - real implementation would need proper C# object initialization
-        return f'JsonSerializer.Deserialize<Dictionary<string, object>>(@"{json_str}")'
+        return f'LoadConfiguration("{config_filename}")'
 
     def format_code(self, code: str) -> str:
         """
@@ -395,21 +392,18 @@ class CSharpNUnitGenerator(BaseGenerator):
 
         return pascal_case
 
-    def _format_config_for_csharp(self, config: Dict[str, Any]) -> str:
+    def _format_config_for_csharp(self, config: Dict[str, Any], config_filename: str = "config.json") -> str:
         """
-        Format configuration for C# Dictionary initialization.
+        Generate C# code to load configuration from file.
 
         Args:
-            config: FlowSphere configuration
+            config: FlowSphere configuration (unused, kept for backward compatibility)
+            config_filename: Name of the config file to load
 
         Returns:
-            C# Dictionary initialization code
+            C# code to load config from file
         """
-        # For now, use JSON serialization as placeholder
-        # In production, this would generate proper C# dictionary syntax
-        json_str = json.dumps(config, indent=12)
-        # This is a simplified version - real implementation would need proper C# object initialization
-        return f'JsonSerializer.Deserialize<Dictionary<string, object>>(@"{json_str}")'
+        return f'LoadConfiguration("{config_filename}")'
 
     def format_code(self, code: str) -> str:
         """
@@ -731,18 +725,18 @@ class CSharpSpecFlowGenerator(BaseGenerator):
 
         return pascal_case
 
-    def _format_config_for_csharp(self, config: Dict[str, Any]) -> str:
+    def _format_config_for_csharp(self, config: Dict[str, Any], config_filename: str = "config.json") -> str:
         """
-        Format configuration for C# Dictionary initialization.
+        Generate C# code to load configuration from file.
 
         Args:
-            config: FlowSphere configuration
+            config: FlowSphere configuration (unused, kept for backward compatibility)
+            config_filename: Name of the config file to load
 
         Returns:
-            C# Dictionary initialization code
+            C# code to load config from file
         """
-        json_str = json.dumps(config, indent=12)
-        return f'JsonSerializer.Deserialize<Dictionary<string, object>>(@"{json_str}")'
+        return f'LoadConfiguration("{config_filename}")'
 
     def format_code(self, code: str) -> str:
         """

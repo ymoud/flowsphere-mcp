@@ -286,8 +286,11 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 "language": generator.get_language_name(),
                 "framework": generator.get_framework_name(),
                 "code": generated_code,
+                "config_json": json.dumps(config, indent=2),
+                "config_filename": "config.json",
                 "dependencies": generator.get_required_dependencies(),
-                "usage_instructions": generator.get_usage_instructions()
+                "usage_instructions": generator.get_usage_instructions(),
+                "note": "Save the config_json to a file named 'config.json' in the same directory as your tests or in a configuration/ subdirectory"
             }
 
             return [
@@ -340,8 +343,10 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 "language": generator.get_language_name(),
                 "framework": generator.get_framework_name(),
                 "code": generated_code,
+                "config_json": json.dumps(config, indent=2),
+                "config_filename": "config.json",
                 "dependencies": generator.get_required_dependencies(),
-                "note": "Output contains both Gherkin feature file and Python step definitions. See file separators in the output."
+                "note": "Output contains both Gherkin feature file and Python step definitions. See file separators in the output. Save config_json to 'config.json' in the features/ parent directory or configuration/ subdirectory."
             }
 
             return [
@@ -562,9 +567,12 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 "language": generator.get_language_name(),
                 "framework": generator.get_framework_name(),
                 "code": generated_code,
+                "config_json": json.dumps(config, indent=2),
+                "config_filename": "config.json",
                 "dependencies": generator.get_required_dependencies(),
                 "usage_instructions": generator.get_usage_instructions(),
-                "csproj": generator.get_csproj_template()
+                "csproj": generator.get_csproj_template(),
+                "note": "Save the config_json to a file named 'config.json' in the same directory as your tests or in a Configuration/ subdirectory"
             }
 
             return [
@@ -619,9 +627,12 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 "language": generator.get_language_name(),
                 "framework": generator.get_framework_name(),
                 "code": generated_code,
+                "config_json": json.dumps(config, indent=2),
+                "config_filename": "config.json",
                 "dependencies": generator.get_required_dependencies(),
                 "usage_instructions": generator.get_usage_instructions(),
-                "csproj": generator.get_csproj_template()
+                "csproj": generator.get_csproj_template(),
+                "note": "Save the config_json to a file named 'config.json' in the same directory as your tests or in a Configuration/ subdirectory"
             }
 
             return [
@@ -679,10 +690,12 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
                 "framework": generator.get_framework_name(),
                 "feature": generated["feature"],
                 "steps": generated["steps"],
+                "config_json": json.dumps(config, indent=2),
+                "config_filename": "config.json",
                 "dependencies": generator.get_required_dependencies(),
                 "usage_instructions": generator.get_usage_instructions(),
                 "csproj": generator.get_csproj_template(),
-                "note": "Save feature file as *.feature in Features/ directory and steps file as *Steps.cs in StepDefinitions/ directory"
+                "note": "Save feature file as *.feature in Features/ directory, steps file as *Steps.cs in StepDefinitions/ directory, and config_json as 'config.json' in the test project root or Configuration/ subdirectory"
             }
 
             return [
