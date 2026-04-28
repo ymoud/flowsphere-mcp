@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/ymoud-flowsphere-mcp-badge.png)](https://mseep.ai/app/ymoud-flowsphere-mcp)
+
 # FlowSphere MCP Server
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/ymoud/flowsphere-mcp/releases)
